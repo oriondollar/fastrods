@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 
@@ -79,11 +78,6 @@ func GetAxes(rod *Rod) {
 
 func GetVertices(n_dim int, n_vertices int, rod *Rod) {
 	rot_mat := mat.NewDense(n_dim, n_dim, rod.rot_mat)
-	fmt.Println("rot mat")
-	fmt.Println(rot_mat.At(0, 0))
-	fmt.Println(rot_mat.At(0, 1))
-	fmt.Println(rot_mat.At(1, 0))
-	fmt.Println(rot_mat.At(1, 1))
 	vert_vx_mat := mat.NewDense(n_vertices, n_dim, rod.vertical_vertices)
 	rot_vx_mat := mat.NewDense(n_vertices, n_dim, rod.rotated_vertices)
 	rot_vx_mat.Mul(vert_vx_mat, rot_mat)
