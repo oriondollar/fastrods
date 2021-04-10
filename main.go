@@ -55,8 +55,12 @@ func main() {
 	fmt.Println("placing rods...")
 	rods := make([]*Rod, config.n_rods, MAX_RODS)
 	for i := 0; i < config.n_rods; i++ {
+		// initialize rod
 		rods[i] = &Rod{}
 		rods[i].id = i
-		RodInit(&config, rods[i])
+		RodInit(&config, rods[i], rods, grid)
 	}
+
+	WriteRodData(rods, "rod_locs.dat")
+
 }

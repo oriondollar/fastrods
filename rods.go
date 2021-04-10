@@ -11,10 +11,10 @@ func GetRandLoc(n_dim int, box_length float64, rod *Rod) {
 	x := rand.Float64() * box_length
 	y := rand.Float64() * box_length
 	if n_dim == 2 {
-		rod.loc = append((*rod).loc, x, y)
+		rod.loc = []float64{x, y}
 	} else if n_dim == 3 {
 		z := rand.Float64() * box_length
-		rod.loc = append((*rod).loc, x, y, z)
+		rod.loc = []float64{x, y, z}
 	}
 }
 
@@ -86,7 +86,59 @@ func GetVertices(n_dim int, n_vertices int, rod *Rod) {
 	}
 }
 
-func RodInit(config *Config, rod *Rod) {
+func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
+	if rod1.id == rod2.id {
+		return false
+	}
+	move_rod := false
+	var r [2]float64
+	r[0] = rod1.loc[0] - rod2.loc[0]
+	r[1] = rod1.loc[1] - rod2.loc[1]
+	for d := 0; d < len(rod1.loc); d++ {
+		f := math.Round(r[d] / config.box_length)
+		if math.Round(f) != 0 {
+			r[d] = r[d] - config.box_length*f
+			move_rod = true
+		}
+	}
+	if move_rod {
+		rod2 = RodDeepCopy(rod2)
+		rod2.loc[0] = rod1.loc[0] - r[0]
+		rod2.loc[1] = rod1.loc[1] - r[1]
+		GetAxes(rod2)
+		GetVertices(config.n_dim, config.n_vertices, rod2)
+	}
+	projections := make([][]float64, config.n_dim)
+	for i := 0; i < config.n_dim; i++ {
+		projections[i] = make([]float64, config.n_dim*2)
+	}
+	axes := make([][]float64, config.n_dim*2)
+	for i := 0; i < config.n_dim*2; i++ {
+		axes[i] = make([]float64, config.n_dim)
+	}
+	axes[:][0] = rod1.long_axis
+	axes[:][1] = rod1.short_axis
+	axes[:][2] = rod2.long_axis
+	axes[:][3] = rod2.short_axis
+	overlap := true
+	for i := 0; i < config.n_dim*2; i++ {
+		for j := 0; j < config.n_vertices; j++ {
+			projections[0][j] = axes[i][0]*rod1.rotated_vertices[j*2] + axes[i][1]*rod1.rotated_vertices[(j*2)+1]
+			projections[1][j] = axes[i][0]*rod2.rotated_vertices[j*2] + axes[i][1]*rod2.rotated_vertices[(j*2)+1]
+		}
+
+		min_proj_1, max_proj_1 := MinMax(projections[0][:])
+		min_proj_2, max_proj_2 := MinMax(projections[1][:])
+		if (min_proj_1 > max_proj_2) || (max_proj_1 < min_proj_2) {
+			overlap = false
+			return overlap
+		}
+	}
+	return overlap
+}
+
+func RodInit(config *Config, rod *Rod, rods []*Rod, grid []*GridSpace) {
+	// set rod struct variables
 	rod.length = config.rod_length
 	rod.width = config.rod_width
 	rod.length_by_2 = rod.length / 2
@@ -94,14 +146,36 @@ func RodInit(config *Config, rod *Rod) {
 	rod.long_axis = make([]float64, config.n_dim)
 	rod.short_axis = make([]float64, config.n_dim)
 	rod.rot_mat = make([]float64, config.n_dim*config.n_dim)
-	n_vertices := int(math.Pow(2, float64(config.n_dim)))
-	rod.vertical_vertices = make([]float64, n_vertices*config.n_dim)
+	rod.vertical_vertices = make([]float64, config.n_vertices*config.n_dim)
 	all_vertices := []float64{-rod.length_by_2, rod.width_by_2, rod.length_by_2, rod.width_by_2, rod.length_by_2, -rod.width_by_2, -rod.length_by_2, -rod.width_by_2}
 	rod.vertical_vertices = all_vertices
-	rod.rotated_vertices = make([]float64, n_vertices*config.n_dim)
-	GetRandLoc(config.n_dim, config.box_length, rod)
-	GetRandOrientation(config.restrict_orientations, rod)
-	GetGridID(config.box_length, config.n_bins, &config.grid_bins, rod)
-	GetAxes(rod)
-	GetVertices(config.n_dim, n_vertices, rod)
+	rod.rotated_vertices = make([]float64, config.n_vertices*config.n_dim)
+
+	no_overlaps := false
+	for !no_overlaps {
+		// get random loc and orientation, set grid_id and vertices
+		GetRandLoc(config.n_dim, config.box_length, rod)
+		GetRandOrientation(config.restrict_orientations, rod)
+		GetGridID(config.box_length, config.n_bins, &config.grid_bins, rod)
+		GetAxes(rod)
+		GetVertices(config.n_dim, config.n_vertices, rod)
+
+		// check nearest neighbor list to see if there are any overlaps
+		no_overlaps = true
+		rod_neighbors := grid[rod.grid_id].rod_neighbors
+		for i := 0; i < len(rod_neighbors); i++ {
+			overlap := CheckOverlap(rod, rods[rod_neighbors[i]], config)
+			if overlap {
+				no_overlaps = false
+				break
+			}
+		}
+	}
+
+	// add rod to neighbor list of each neighboring grid
+	gridspace := grid[rod.grid_id]
+	for i := 0; i < len(gridspace.grid_neighbors); i++ {
+		neighbor_id := gridspace.grid_neighbors[i]
+		grid[neighbor_id].rod_neighbors = append(grid[neighbor_id].rod_neighbors, rod.id)
+	}
 }
