@@ -1,0 +1,12 @@
+n_dim: 2
+n_rods: 200
+rod_length: 10
+aspect_ratio: 10
+box_length: 100
+mc_alg: grand_canonical
+cutoff_ratio: 1.5
+restrict_orientations: true
+temp: 300
+mu: 2550
+n_cycles: 1
+k: 1
