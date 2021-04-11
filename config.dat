@@ -1,5 +1,5 @@
 n_dim: 2
-n_rods: 200
+n_rods: 0
 rod_length: 10
 aspect_ratio: 10
 box_length: 100
@@ -8,5 +8,10 @@ cutoff_ratio: 1.5
 restrict_orientations: true
 temp: 300
 mu: 2550
-n_cycles: 1
+n_cycles: 100000
+n_insert_deletes: 2000
 k: 1
+write_CVs: true
+write_traj: true
+write_CV_freq: 10
+write_traj_freq: 500

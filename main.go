@@ -29,6 +29,7 @@ type Rod struct {
 	vertical_vertices []float64
 	rotated_vertices  []float64
 	grid_id           int
+	exists            bool
 }
 
 func main() {
@@ -38,7 +39,7 @@ func main() {
 
 	// reading parameter file
 	fmt.Println("reading params...")
-	config, err := ReadConfig("params.dat")
+	config, err := ReadConfig("config.dat")
 	Check(err)
 
 	// initialize grid
@@ -58,9 +59,31 @@ func main() {
 		// initialize rod
 		rods[i] = &Rod{}
 		rods[i].id = i
-		RodInit(&config, rods[i], rods, grid)
+
+		// loop until rod is placed with no overlaps
+		no_overlaps := false
+		for !no_overlaps {
+			// get random loc and orientation, set grid_id and vertices
+			RodInit(&config, rods[i])
+
+			// check nearest neighbor list to see if there are any overlaps
+			no_overlaps = CheckNeighborOverlaps(rods[i], grid, rods, &config)
+		}
+		rods[i].exists = true
+
+		// add rod to neighbor list of each neighboring grid
+		gridspace := grid[rods[i].grid_id]
+		for j := 0; j < len(gridspace.grid_neighbors); j++ {
+			neighbor_id := gridspace.grid_neighbors[j]
+			grid[neighbor_id].rod_neighbors = append(grid[neighbor_id].rod_neighbors, rods[i].id)
+		}
 	}
 
-	WriteRodData(rods, "rod_locs.dat")
+	MonteCarlo(&rods, grid, &config)
+
+	fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
+	fmt.Println(config.translation_successes / config.translation_attempts * 100)
+	fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
+	fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
 
 }
