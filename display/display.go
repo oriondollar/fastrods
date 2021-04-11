@@ -4,7 +4,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 )
 
-func makebox(s tcell.Screen) {
+func MakeBox(s tcell.Screen) {
 	w, h := s.Size()
 
 	if w == 0 || h == 0 {
