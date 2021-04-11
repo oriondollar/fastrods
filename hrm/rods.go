@@ -1,4 +1,4 @@
-package main
+package hrm
 
 import (
 	"math"
@@ -6,6 +6,23 @@ import (
 
 	"gonum.org/v1/gonum/mat"
 )
+
+type Rod struct {
+	id                int
+	loc               []float64
+	orientation       float64
+	length            float64
+	width             float64
+	length_by_2       float64
+	width_by_2        float64
+	long_axis         []float64
+	short_axis        []float64
+	rot_mat           []float64
+	vertical_vertices []float64
+	rotated_vertices  []float64
+	grid_id           int
+	exists            bool
+}
 
 func GetRandRod(rods []*Rod) (rod *Rod) {
 	exists := false

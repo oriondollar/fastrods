@@ -1,4 +1,9 @@
-package main
+package hrm
+
+type GridSpace struct {
+	grid_neighbors [9]int
+	rod_neighbors  []int
+}
 
 func GetGridNeighbors(x int, y int, n_bins int, grid_space *GridSpace) {
 	x_neighbors := [3]int{x - 1, x, x + 1}
