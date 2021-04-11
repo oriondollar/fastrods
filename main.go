@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"sync"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -12,32 +14,11 @@ var (
 	MAX_RODS int = 2000
 )
 
-type GridSpace struct {
-	grid_neighbors [9]int
-	rod_neighbors  []int
-}
-
-type Rod struct {
-	id                int
-	loc               []float64
-	orientation       float64
-	length            float64
-	width             float64
-	length_by_2       float64
-	width_by_2        float64
-	long_axis         []float64
-	short_axis        []float64
-	rot_mat           []float64
-	vertical_vertices []float64
-	rotated_vertices  []float64
-	grid_id           int
-	exists            bool
-}
-
 func main() {
 	fmt.Println("starting program...")
-	// seed random number generator
+	// seed random number generator and create mutex
 	rand.Seed(time.Now().UnixNano())
+	var mutex = &sync.Mutex{}
 
 	// reading parameter file
 	fmt.Println("reading params...")
@@ -84,40 +65,51 @@ func main() {
 	// set up display screen
 	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
 	s, e := tcell.NewScreen()
-	fmt.Println(s.Colors())
-	fmt.Println(e)
-	// if e != nil {
-	// 	fmt.Fprintf(os.Stderr, "%v\n", e)
-	// 	os.Exit(1)
-	// }
-	// if e = s.Init(); e != nil {
-	// 	fmt.Fprintf(os.Stderr, "%v\n", e)
-	// 	os.Exit(1)
-	// }
+	if e != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", e)
+		os.Exit(1)
+	}
+	if e = s.Init(); e != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", e)
+		os.Exit(1)
+	}
 
-	// s.SetStyle(tcell.StyleDefault.
-	// 	Foreground(tcell.ColorBlack).
-	// 	Background(tcell.ColorWhite))
-	// s.Clear()
+	s.SetStyle(tcell.StyleDefault.
+		Foreground(tcell.ColorDefault))
+	s.Clear()
 
-	// quit := make(chan struct{})
-	// go func() {
-	// 	for {
-	// 		ev := s.PollEvent()
-	// 		switch ev := ev.(type) {
-	// 		case *tcell.EventKey:
-	// 			switch ev.Key() {
-	// 			case tcell.KeyEscape, tcell.KeyEnter:
-	// 				close(quit)
-	// 				return
-	// 			case tcell.KeyCtrlL:
-	// 				s.Sync()
-	// 			}
-	// 		case *tcell.EventResize:
-	// 			s.Sync()
-	// 		}
-	// 	}
-	// }()
+	quit := make(chan struct{})
+	go func() {
+		for {
+			ev := s.PollEvent()
+			switch ev := ev.(type) {
+			case *tcell.EventKey:
+				switch ev.Key() {
+				case tcell.KeyEscape, tcell.KeyEnter:
+					close(quit)
+					return
+				case tcell.KeyCtrlL:
+					s.Sync()
+				}
+			case *tcell.EventResize:
+				s.Sync()
+			}
+		}
+	}()
+
+loop:
+	for {
+		select {
+		case <-quit:
+			break loop
+		case <-time.After(time.Millisecond * 50):
+		}
+		mutex.Lock()
+		MakeBox(s, rods)
+		mutex.Unlock()
+	}
+
+	s.Fini()
 
 	// MonteCarlo(&rods, grid, &config)
 

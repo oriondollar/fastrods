@@ -1,4 +1,4 @@
-package hrm
+package main
 
 import (
 	"math"

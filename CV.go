@@ -1,4 +1,4 @@
-package hrm
+package main
 
 import (
 	"gonum.org/v1/gonum/mat"

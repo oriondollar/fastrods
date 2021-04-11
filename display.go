@@ -1,11 +1,10 @@
-package display
+package main
 
 import (
 	"github.com/gdamore/tcell/v2"
-	"github.com/oriondollar/fastrods/hrm"
 )
 
-func MakeBox(s tcell.Screen, rodState []*hrm.Rod) {
+func MakeBox(s tcell.Screen, rodState []*Rod) {
 	w, h := s.Size()
 
 	if w == 0 || h == 0 {

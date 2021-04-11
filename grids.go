@@ -1,4 +1,4 @@
-package hrm
+package main
 
 type GridSpace struct {
 	grid_neighbors [9]int

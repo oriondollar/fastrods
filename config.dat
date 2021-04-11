@@ -8,10 +8,10 @@ cutoff_ratio: 1.5
 restrict_orientations: true
 temp: 300
 mu: 2550
-n_cycles: 100000
+n_cycles: 1000000
 n_insert_deletes: 2000
 k: 1
 write_CVs: true
 write_traj: true
-write_CV_freq: 10
-write_traj_freq: 500
+write_CV_freq: 100
+write_traj_freq: 5000
