@@ -79,6 +79,12 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 				}
 			}
 		}
+		if config.write_CVs {
+			CV_writer.Flush()
+		}
+		if config.write_traj {
+			traj_writer.Flush()
+		}
 		bar.Increment()
 	}
 	bar.Finish()

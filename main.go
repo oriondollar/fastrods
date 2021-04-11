@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+
+	"github.com/gdamore/tcell/v2"
 )
 
 var (
@@ -79,11 +81,49 @@ func main() {
 		}
 	}
 
-	MonteCarlo(&rods, grid, &config)
+	// set up display screen
+	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
+	s, e := tcell.NewScreen()
+	fmt.Println(s.Colors())
+	fmt.Println(e)
+	// if e != nil {
+	// 	fmt.Fprintf(os.Stderr, "%v\n", e)
+	// 	os.Exit(1)
+	// }
+	// if e = s.Init(); e != nil {
+	// 	fmt.Fprintf(os.Stderr, "%v\n", e)
+	// 	os.Exit(1)
+	// }
 
-	fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
-	fmt.Println(config.translation_successes / config.translation_attempts * 100)
-	fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
-	fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
+	// s.SetStyle(tcell.StyleDefault.
+	// 	Foreground(tcell.ColorBlack).
+	// 	Background(tcell.ColorWhite))
+	// s.Clear()
+
+	// quit := make(chan struct{})
+	// go func() {
+	// 	for {
+	// 		ev := s.PollEvent()
+	// 		switch ev := ev.(type) {
+	// 		case *tcell.EventKey:
+	// 			switch ev.Key() {
+	// 			case tcell.KeyEscape, tcell.KeyEnter:
+	// 				close(quit)
+	// 				return
+	// 			case tcell.KeyCtrlL:
+	// 				s.Sync()
+	// 			}
+	// 		case *tcell.EventResize:
+	// 			s.Sync()
+	// 		}
+	// 	}
+	// }()
+
+	// MonteCarlo(&rods, grid, &config)
+
+	// fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
+	// fmt.Println(config.translation_successes / config.translation_attempts * 100)
+	// fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
+	// fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
 
 }
