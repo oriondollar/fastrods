@@ -22,6 +22,7 @@ type Rod struct {
 	rotated_vertices  []float64
 	grid_id           int
 	exists            bool
+	static            bool
 }
 
 func GetRandRod(rods []*Rod) (rod *Rod) {

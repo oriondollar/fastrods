@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
 
 	"github.com/cheggaaa/pb/v3"
 )
@@ -36,15 +37,19 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 
 	// MC loop
 	bar := pb.StartNew(config.n_cycles)
+	bar.SetRefreshRate(time.Second)
 	for i := 0; i < config.n_cycles; i++ {
 		for j := 0; j < config.n_rods; j++ {
 			move_prob := rand.Float64()
-			if move_prob < (1. / 2.) {
+			if move_prob < (1. / 3.) {
 				rod := GetRandRod(*rods)
 				Rotate(rod, grid, config, *rods)
-			} else {
+			} else if move_prob < (2. / 3.) {
 				rod := GetRandRod(*rods)
 				Translate(rod, grid, config, *rods)
+			} else {
+				rod := GetRandRod(*rods)
+				Swap(rod, grid, config, *rods)
 			}
 		}
 		if config.mc_alg == "grand_canonical" {
@@ -61,20 +66,20 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 			}
 		}
 		// write results
-		if (config.write_CVs) && (i%config.write_CV_freq == 0) {
+		if (config.write_CVs) && ((i+1)%config.write_CV_freq == 0) {
 			density := CalcDensity(config)
 			S := CalcS(*rods, config)
 			_, err = CV_writer.WriteString(fmt.Sprintf("%v,%.3f,%.3f\n", i, S, density))
 			Check(err)
 		}
-		if (config.write_traj) && (i%config.write_traj_freq == 0) {
+		if (config.write_traj) && ((i+1)%config.write_traj_freq == 0) {
 			for j := 0; j < len(*rods); j++ {
 				id := (*rods)[j].id
 				x := (*rods)[j].loc[0]
 				y := (*rods)[j].loc[1]
 				orientation := (*rods)[j].orientation
 				if (*rods)[j].exists {
-					_, err = traj_writer.WriteString(fmt.Sprintf("%v,%v,%.3f,%.3f,%.3f\n", i, id, x, y, orientation))
+					_, err = traj_writer.WriteString(fmt.Sprintf("%v,%v,%.3f,%.3f,%.3f\n", i+1, id, x, y, orientation))
 					Check(err)
 				}
 			}

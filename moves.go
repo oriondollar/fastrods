@@ -5,6 +5,76 @@ import (
 	"math/rand"
 )
 
+func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
+	// copy rod structs to use for rosenbluth trials
+	og_rod := RodDeepCopy(rod)
+	og_grid_id := og_rod.grid_id
+	new_rod := RodDeepCopy(rod)
+
+	// move rod to new location
+	GetRandLoc(config.n_dim, config.box_length, new_rod)
+	GetGridID(config.box_length, config.n_bins, &config.grid_bins, new_rod)
+	new_grid_id := new_rod.grid_id
+
+	// run k rosenbluth trials to generate swap weights (new location - new orientations)
+	GetRandOrientation(config.restrict_orientations, new_rod)
+	GetAxes(new_rod)
+	GetVertices(config.n_dim, config.n_vertices, new_rod)
+	new_weights := make([]float64, config.k)
+	var new_weight_sum float64 = 0
+	new_orientations := make([]float64, config.k)
+	for i := 0; i < config.k; i++ {
+		new_orientations[i] = new_rod.orientation
+		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
+		if no_overlaps {
+			new_weights[i] = 1
+			new_weight_sum += 1
+		} else {
+			new_weights[i] = 0
+		}
+
+		if i != (config.k - 1) {
+			GetRandOrientation(config.restrict_orientations, new_rod)
+			GetAxes(new_rod)
+			GetVertices(config.n_dim, config.n_vertices, new_rod)
+		}
+	}
+
+	// select new configuration
+	new_rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, config.k)
+
+	// run k-1 rosenbluth trials to generate weights for original configuration
+	var og_weight_sum float64 = 1
+	for i := 0; i < (config.k - 1); i++ {
+		GetRandOrientation(config.restrict_orientations, og_rod)
+		GetAxes(og_rod)
+		GetVertices(config.n_dim, config.n_vertices, og_rod)
+		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
+		if no_overlaps {
+			og_weight_sum += 1
+		}
+	}
+
+	// calculate acceptance probability for swap
+	acc := new_weight_sum / og_weight_sum
+	if rand.Float64() < acc {
+		// move accepted
+		GetAxes(new_rod)
+		GetVertices(config.n_dim, config.n_vertices, new_rod)
+		if og_grid_id == new_rod.grid_id {
+			rods[rod.id] = new_rod
+		} else {
+			new_rod.grid_id = og_grid_id // temporarily store old grid_id in rod to update old neighbor lists
+			RemFromNeighborLists(new_rod, grid)
+			new_rod.grid_id = new_grid_id // restore new grid_id to add to new neighbor lists
+			AddToNeighborLists(new_rod, grid)
+			rods[rod.id] = new_rod
+		}
+		config.swap_successes++
+	}
+	config.swap_attempts++
+}
+
 func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// store original rod location and grid id
 	og_loc := rod.loc
@@ -67,14 +137,17 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_rod := RodDeepCopy(rod)
 	new_rod := RodDeepCopy(rod)
 
+	// set rosenbluth k to 1 for rotation
+	k := 1
+
 	// run k rosenbluth trials to generate rotation weights (same location - new orientations)
 	GetRandOrientation(config.restrict_orientations, new_rod)
 	GetAxes(new_rod)
 	GetVertices(config.n_dim, config.n_vertices, new_rod)
-	new_weights := make([]float64, config.k)
+	new_weights := make([]float64, k)
 	var new_weight_sum float64 = 0
-	new_orientations := make([]float64, config.k)
-	for i := 0; i < config.k; i++ {
+	new_orientations := make([]float64, k)
+	for i := 0; i < k; i++ {
 		new_orientations[i] = new_rod.orientation
 		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
 		if no_overlaps {
@@ -84,7 +157,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 			new_weights[i] = 0
 		}
 
-		if i != (config.k - 1) {
+		if i != (k - 1) {
 			GetRandOrientation(config.restrict_orientations, new_rod)
 			GetAxes(new_rod)
 			GetVertices(config.n_dim, config.n_vertices, new_rod)
@@ -92,11 +165,11 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	}
 
 	// select new configuration
-	new_rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, config.k)
+	new_rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
 
 	// run k-1 rosenbluth trials to generate weights for original configuration
 	var og_weight_sum float64 = 1
-	for i := 0; i < (config.k - 1); i++ {
+	for i := 0; i < (k - 1); i++ {
 		GetRandOrientation(config.restrict_orientations, og_rod)
 		GetAxes(og_rod)
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
@@ -135,11 +208,14 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 		RodInit(config, rod)
 	}
 
+	// set rosenbluth k to 1 for insertion
+	k := 1
+
 	// run k rosenbluth trials to generate insertion weights (same location - new orientation)
-	new_weights := make([]float64, config.k)
+	new_weights := make([]float64, k)
 	var new_weight_sum float64 = 0
-	new_orientations := make([]float64, config.k)
-	for i := 0; i < config.k; i++ {
+	new_orientations := make([]float64, k)
+	for i := 0; i < k; i++ {
 		new_orientations[i] = rod.orientation
 		no_overlaps := CheckNeighborOverlaps(rod, grid, *rods, config)
 		if no_overlaps {
@@ -149,7 +225,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 			new_weights[i] = 0
 		}
 
-		if i != (config.k - 1) {
+		if i != (k - 1) {
 			GetRandOrientation(config.restrict_orientations, rod)
 			GetAxes(rod)
 			GetVertices(config.n_dim, config.n_vertices, rod)
@@ -157,11 +233,11 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 	}
 
 	// select new configuration
-	rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, config.k)
+	rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
 
 	// calculate acceptance probability for insertion
 	N := float64(config.n_rods)
-	acc := (config.V * math.Exp(config.beta*config.mu) / (N + 1)) * (new_weight_sum / float64(config.k))
+	acc := (config.V * math.Exp(config.beta*config.mu) / (N + 1)) * (new_weight_sum / float64(k))
 	if rand.Float64() < acc {
 		// move accepted
 		rod.exists = true

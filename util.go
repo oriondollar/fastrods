@@ -39,6 +39,8 @@ type Config struct {
 	avail_rod_ids         []int
 	next_unused_rod_id    int
 
+	swap_successes        float64
+	swap_attempts         float64
 	insertion_successes   float64
 	insertion_attempts    float64
 	deletion_successes    float64
@@ -211,6 +213,8 @@ func ReadConfig(fn string) (config Config, err error) {
 	config.beta = 1 / (config.temp * config.kb)
 	config.next_unused_rod_id = config.n_rods
 
+	config.swap_successes = 0
+	config.swap_attempts = 0
 	config.insertion_successes = 0
 	config.insertion_attempts = 0
 	config.deletion_successes = 0

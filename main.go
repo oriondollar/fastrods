@@ -3,11 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
-	"os"
-	"sync"
 	"time"
-
-	"github.com/gdamore/tcell/v2"
 )
 
 var (
@@ -15,10 +11,11 @@ var (
 )
 
 func main() {
+	// defer profile.Start(profile.TraceProfile, profile.ProfilePath(".")).Stop()
+
 	fmt.Println("starting program...")
-	// seed random number generator and create mutex
+	// seed random number generator
 	rand.Seed(time.Now().UnixNano())
-	var mutex = &sync.Mutex{}
 
 	// reading parameter file
 	fmt.Println("reading params...")
@@ -62,60 +59,14 @@ func main() {
 		}
 	}
 
-	// set up display screen
-	tcell.SetEncodingFallback(tcell.EncodingFallbackASCII)
-	s, e := tcell.NewScreen()
-	if e != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", e)
-		os.Exit(1)
-	}
-	if e = s.Init(); e != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", e)
-		os.Exit(1)
-	}
+	// WriteTraj(rods, "rod_init.dat")
 
-	s.SetStyle(tcell.StyleDefault.
-		Foreground(tcell.ColorDefault))
-	s.Clear()
+	MonteCarlo(&rods, grid, &config)
 
-	quit := make(chan struct{})
-	go func() {
-		for {
-			ev := s.PollEvent()
-			switch ev := ev.(type) {
-			case *tcell.EventKey:
-				switch ev.Key() {
-				case tcell.KeyEscape, tcell.KeyEnter:
-					close(quit)
-					return
-				case tcell.KeyCtrlL:
-					s.Sync()
-				}
-			case *tcell.EventResize:
-				s.Sync()
-			}
-		}
-	}()
-
-loop:
-	for {
-		select {
-		case <-quit:
-			break loop
-		case <-time.After(time.Millisecond * 50):
-		}
-		mutex.Lock()
-		MakeBox(s, rods)
-		mutex.Unlock()
-	}
-
-	s.Fini()
-
-	// MonteCarlo(&rods, grid, &config)
-
-	// fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
-	// fmt.Println(config.translation_successes / config.translation_attempts * 100)
-	// fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
-	// fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
+	fmt.Println(config.swap_successes / config.swap_attempts * 100)
+	fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
+	fmt.Println(config.translation_successes / config.translation_attempts * 100)
+	fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
+	fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
 
 }
