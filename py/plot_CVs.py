@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-from tqdm.auto import trange
 import matplotlib.pyplot as plt
 
 colvar = pd.read_csv('../COLVAR.dat') ### PATH TO COLVAR HERE
