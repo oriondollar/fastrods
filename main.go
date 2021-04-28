@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	MAX_RODS int = 2000
+	MAX_RODS int     = 2000
+	PI       float64 = 3.1415926535897932384626433832795028841971
 )
 
 func main() {
@@ -60,6 +61,29 @@ func main() {
 	}
 
 	// WriteTraj(rods, "rod_init.dat")
+
+	// rods[0].loc = []float64{0.05, 0.05}
+	// rods[0].orientation = (-PI / 6) * (180 / PI)
+	// // rods[0].orientation = 0.
+	// GetAxes(rods[0])
+	// GetVertices(config.n_dim, config.n_vertices, rods[0])
+	// fmt.Println("pos", rods[0].loc[0], rods[0].loc[1])
+	// fmt.Println("long", rods[0].long_axis)
+	// fmt.Println("short", rods[0].short_axis)
+	// fmt.Println("rod mat", rods[0].rot_mat)
+	// fmt.Println("og vertices", rods[0].vertical_vertices)
+	// fmt.Println("vertices", rods[0].rotated_vertices)
+	// width1 := math.Sqrt(math.Pow(rods[0].rotated_vertices[6]-rods[0].rotated_vertices[0], 2) + math.Pow(rods[0].rotated_vertices[7]-rods[0].rotated_vertices[1], 2))
+	// width2 := math.Sqrt(math.Pow(rods[0].rotated_vertices[4]-rods[0].rotated_vertices[2], 2) + math.Pow(rods[0].rotated_vertices[5]-rods[0].rotated_vertices[3], 2))
+	// fmt.Println("width1", float32(width1))
+	// fmt.Println("width2", float32(width2))
+
+	// fmt.Println("0 Select Rate -", config.n_rot_0/config.n_attempt_0*100)
+	// fmt.Println("60 Select Rate -", config.n_rot_60/config.n_attempt_60*100)
+	// fmt.Println("120 Select Rate -", config.n_rot_120/config.n_attempt_120*100)
+	// fmt.Println("0 attempts -", config.n_attempt_0)
+	// fmt.Println("60 attempts -", config.n_attempt_60)
+	// fmt.Println("120 attempts -", config.n_attempt_120)
 
 	MonteCarlo(&rods, grid, &config)
 

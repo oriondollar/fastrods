@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 
@@ -179,9 +180,12 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 			projections[1][j] = axes[i][0]*rod2.rotated_vertices[j*2] + axes[i][1]*rod2.rotated_vertices[(j*2)+1]
 		}
 
+		if config.print_proj {
+			fmt.Println(projections)
+		}
 		min_proj_1, max_proj_1 := MinMax(projections[0][:])
 		min_proj_2, max_proj_2 := MinMax(projections[1][:])
-		if (min_proj_1 > max_proj_2) || (max_proj_1 < min_proj_2) {
+		if (float32(min_proj_1) > float32(max_proj_2)) || (float32(max_proj_1) < float32(min_proj_2)) {
 			overlap = false
 			return overlap
 		}

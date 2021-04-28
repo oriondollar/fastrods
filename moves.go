@@ -71,8 +71,22 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 			rods[rod.id] = new_rod
 		}
 		config.swap_successes++
+		if rods[rod.id].orientation == 0. {
+			config.n_rot_0++
+		} else if rods[rod.id].orientation == 60. {
+			config.n_rot_60++
+		} else if rods[rod.id].orientation == 120. {
+			config.n_rot_120++
+		}
 	}
 	config.swap_attempts++
+	if new_rod.orientation == 0. {
+		config.n_attempt_0++
+	} else if new_rod.orientation == 60. {
+		config.n_attempt_60++
+	} else if new_rod.orientation == 120. {
+		config.n_attempt_120++
+	}
 }
 
 func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
@@ -187,8 +201,22 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetVertices(config.n_dim, config.n_vertices, new_rod)
 		rods[rod.id] = new_rod
 		config.rotation_successes++
+		if rods[rod.id].orientation == 0. {
+			config.n_rot_0++
+		} else if rods[rod.id].orientation == 60. {
+			config.n_rot_60++
+		} else if rods[rod.id].orientation == 120. {
+			config.n_rot_120++
+		}
 	}
 	config.rotation_attempts++
+	if new_rod.orientation == 0. {
+		config.n_attempt_0++
+	} else if new_rod.orientation == 60. {
+		config.n_attempt_60++
+	} else if new_rod.orientation == 120. {
+		config.n_attempt_120++
+	}
 }
 
 func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {

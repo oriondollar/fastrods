@@ -50,12 +50,21 @@ type Config struct {
 	translation_successes float64
 	translation_attempts  float64
 
+	n_attempt_0   float64
+	n_attempt_60  float64
+	n_attempt_120 float64
+	n_rot_0       float64
+	n_rot_60      float64
+	n_rot_120     float64
+
 	write_CVs       bool
 	write_traj      bool
 	write_CV_freq   int
 	write_traj_freq int
 	CV_out          string
 	traj_out        string
+
+	print_proj bool
 }
 
 func Check(e error) {
@@ -80,7 +89,7 @@ func MinMax(array []float64) (float64, float64) {
 
 func RotateVector(v [2]float64, rot float64) (v_out []float64) {
 	rot = -rot
-	rad := rot * math.Pi / 180
+	rad := rot * PI / 180
 	cos_rad := math.Cos(rad)
 	sin_rad := math.Sin(rad)
 	v_out = append(v_out, v[0]*cos_rad-v[1]*sin_rad)
@@ -223,6 +232,14 @@ func ReadConfig(fn string) (config Config, err error) {
 	config.rotation_attempts = 0
 	config.translation_successes = 0
 	config.translation_attempts = 0
+
+	config.n_attempt_0 = 0
+	config.n_attempt_60 = 0
+	config.n_attempt_120 = 0
+	config.n_rot_0 = 0
+	config.n_rot_60 = 0
+	config.n_rot_120 = 0
+	config.print_proj = false
 
 	return
 }
