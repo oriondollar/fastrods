@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"time"
+
+	"github.com/cheggaaa/pb/v3"
 )
 
 func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
@@ -33,8 +36,8 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 	}
 
 	// MC loop
-	// bar := pb.StartNew(config.n_cycles)
-	// bar.SetRefreshRate(time.Second)
+	bar := pb.StartNew(config.n_cycles)
+	bar.SetRefreshRate(time.Second)
 	for i := 0; i < config.n_cycles; i++ {
 		for j := 0; j < config.n_rods; j++ {
 			move_prob := rand.Float64()
@@ -76,7 +79,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 				y := (*rods)[j].loc[1]
 				orientation := (*rods)[j].orientation
 				if (*rods)[j].exists {
-					_, err = traj_writer.WriteString(fmt.Sprintf("%v,%v,%.3f,%.3f,%.3f\n", i+1, id, x, y, orientation))
+					_, err = traj_writer.WriteString(fmt.Sprintf("%v,%v,%.16f,%.16f,%.3f\n", i+1, id, x, y, orientation))
 					Check(err)
 				}
 			}
@@ -87,7 +90,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		if config.write_traj {
 			traj_writer.Flush()
 		}
-		// bar.Increment()
+		bar.Increment()
 	}
-	// bar.Finish()
+	bar.Finish()
 }

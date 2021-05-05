@@ -98,9 +98,9 @@ func GetGridID(box_length float64, n_bins int, grid_bins *[]float64, rod *Rod) {
 }
 
 func GetAxes(rod *Rod) {
-	v := [2]float64{0, 1}
+	v := [2]float64{1, 0}
 	rod.long_axis = RotateVector(v, rod.orientation)
-	rod.short_axis = RotateVector(v, rod.orientation-90)
+	rod.short_axis = []float64{-rod.long_axis[1], rod.long_axis[0]}
 	rod.rot_mat = rod.long_axis
 	rod.rot_mat = append(rod.rot_mat, rod.short_axis...)
 }
@@ -185,13 +185,50 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 		}
 		min_proj_1, max_proj_1 := MinMax(projections[0][:])
 		min_proj_2, max_proj_2 := MinMax(projections[1][:])
-		if (float32(min_proj_1) > float32(max_proj_2)) || (float32(max_proj_1) < float32(min_proj_2)) {
+
+		if (min_proj_1 > max_proj_2) || (max_proj_1 < min_proj_2) {
 			overlap = false
 			return overlap
 		}
 	}
 	return overlap
 }
+
+// func CheckOverlapFrenkel(rod1 *Rod, rod2 *Rod, config *Config) bool {
+// 	if rod1.id == rod2.id {
+// 		return false
+// 	}
+// 	move_rod := false
+// 	var r [2]float64
+// 	r[0] = rod1.loc[0] - rod2.loc[0]
+// 	r[1] = rod1.loc[1] - rod2.loc[1]
+// 	for d := 0; d < len(rod1.loc); d++ {
+// 		f := math.Round(r[d] / config.box_length)
+// 		if math.Round(f) != 0 {
+// 			r[d] = r[d] - config.box_length*f
+// 			move_rod = true
+// 		}
+// 	}
+// 	if move_rod {
+// 		rod2 = RodDeepCopy(rod2)
+// 		rod2.loc[0] = rod1.loc[0] - r[0]
+// 		rod2.loc[1] = rod1.loc[1] - r[1]
+// 		GetAxes(rod2)
+// 		GetVertices(config.n_dim, config.n_vertices, rod2)
+// 	}
+
+// 	v_i := rod1.short_axis
+// 	v_j := rod2.short_axis
+// 	rhs := (math.Pow(config.rod_length, 2) / 4) * (1 - math.Pow(v_i[0]*v_j[0]+v_i[1]*v_j[1], 2))
+// 	g_i := math.Pow(r[0]*v_i[0]+r[1]*v_i[1], 2) - rhs
+// 	g_j := math.Pow(r[0]*v_j[0]+r[1]*v_j[1], 2) - rhs
+
+// 	if (g_i < 0) && (g_j < 0) {
+// 		return true
+// 	} else {
+// 		return false
+// 	}
+// }
 
 func CheckNeighborOverlaps(rod *Rod, grid []*GridSpace, rods []*Rod, config *Config) bool {
 	rod_neighbors := grid[rod.grid_id].rod_neighbors

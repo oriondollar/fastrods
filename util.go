@@ -88,8 +88,7 @@ func MinMax(array []float64) (float64, float64) {
 }
 
 func RotateVector(v [2]float64, rot float64) (v_out []float64) {
-	rot = -rot
-	rad := rot * PI / 180
+	rad := rot * math.Pi / 180
 	cos_rad := math.Cos(rad)
 	sin_rad := math.Sin(rad)
 	v_out = append(v_out, v[0]*cos_rad-v[1]*sin_rad)
@@ -211,7 +210,7 @@ func ReadConfig(fn string) (config Config, err error) {
 	config.rod_width = config.rod_length / config.aspect_ratio
 	config.n_vertices = int(math.Pow(2, float64(config.n_dim)))
 	config.nn_cutoff = config.rod_length * config.cutoff_ratio
-	n_bins := math.Round(config.box_length / (config.nn_cutoff / 2))
+	n_bins := math.Floor(config.box_length / config.rod_length)
 	config.grid_spacing = config.box_length / n_bins
 	config.n_bins = int(n_bins)
 	for i := 0; i < config.n_bins; i++ {
