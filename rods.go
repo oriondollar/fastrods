@@ -247,7 +247,7 @@ func CheckNeighborOverlaps(rod *Rod, grid []*GridSpace, rods []*Rod, config *Con
 			overlaps = true
 		}
 	}
-	return overlaps
+	return !overlaps
 }
 
 func RemFromNeighborLists(rod *Rod, grid []*GridSpace) {
