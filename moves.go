@@ -11,6 +11,9 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_grid_id := og_rod.grid_id
 	new_rod := RodDeepCopy(rod)
 
+	// calculate initial surface energy
+	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+
 	// move rod to new location
 	GetRandLoc(config.n_dim, config.box_length, new_rod)
 	GetGridID(config.box_length, config.n_bins, &config.grid_bins, new_rod)
@@ -23,14 +26,19 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_weights := make([]float64, config.k)
 	var new_weight_sum float64 = 0
 	new_orientations := make([]float64, config.k)
+	new_surface_energies := make([]float64, config.k)
 	for i := 0; i < config.k; i++ {
 		new_orientations[i] = new_rod.orientation
+		surface_energy := config.M * CalcSurfaceEnergy(new_rod, config)
 		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
 		if no_overlaps {
-			new_weights[i] = 1
-			new_weight_sum += 1
+			p := math.Exp(-config.beta * surface_energy)
+			new_weights[i] = p
+			new_weight_sum += p
+			new_surface_energies[i] = surface_energy
 		} else {
 			new_weights[i] = 0
+			new_surface_energies[i] = surface_energy + 10e8
 		}
 
 		if i != (config.k - 1) {
@@ -41,22 +49,29 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	}
 
 	// select new configuration
-	new_rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, config.k)
+	var new_surface_energy float64
+	new_rod.orientation, new_surface_energy = SelectWeightedConfig(new_orientations, new_surface_energies, new_weights, new_weight_sum, config.k)
 
 	// run k-1 rosenbluth trials to generate weights for original configuration
-	var og_weight_sum float64 = 1
+	var og_weight_sum float64 = math.Exp(-config.beta * og_surface_energy)
 	for i := 0; i < (config.k - 1); i++ {
 		GetRandOrientation(config.restrict_orientations, og_rod)
 		GetAxes(og_rod)
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
 		if no_overlaps {
-			og_weight_sum += 1
+			surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+			og_weight_sum += math.Exp(-config.beta * surface_energy)
 		}
 	}
 
 	// calculate acceptance probability for swap
-	acc := new_weight_sum / og_weight_sum
+	var acc float64
+	if config.k == 1 {
+		acc = math.Exp(-config.beta * (new_surface_energy - og_surface_energy))
+	} else {
+		acc = (og_weight_sum / new_weight_sum) * math.Exp(-config.beta*(new_surface_energy-og_surface_energy))
+	}
 	if rand.Float64() < acc {
 		// move accepted
 		GetAxes(new_rod)
@@ -71,22 +86,8 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 			rods[rod.id] = new_rod
 		}
 		config.swap_successes++
-		if rods[rod.id].orientation == 0. {
-			config.n_rot_0++
-		} else if rods[rod.id].orientation == 60. {
-			config.n_rot_60++
-		} else if rods[rod.id].orientation == 120. {
-			config.n_rot_120++
-		}
 	}
 	config.swap_attempts++
-	if new_rod.orientation == 0. {
-		config.n_attempt_0++
-	} else if new_rod.orientation == 60. {
-		config.n_attempt_60++
-	} else if new_rod.orientation == 120. {
-		config.n_attempt_120++
-	}
 }
 
 func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
@@ -151,27 +152,35 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_rod := RodDeepCopy(rod)
 	new_rod := RodDeepCopy(rod)
 
-	// set rosenbluth k to 1 for rotation
-	k := 1
+	// calculate initial surface energy
+	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+	// fmt.Printf("Original Surface Energy: %f\n", og_surface_energy)
 
 	// run k rosenbluth trials to generate rotation weights (same location - new orientations)
 	GetRandOrientation(config.restrict_orientations, new_rod)
 	GetAxes(new_rod)
 	GetVertices(config.n_dim, config.n_vertices, new_rod)
-	new_weights := make([]float64, k)
+	new_weights := make([]float64, config.k)
 	var new_weight_sum float64 = 0
-	new_orientations := make([]float64, k)
-	for i := 0; i < k; i++ {
+	new_orientations := make([]float64, config.k)
+	new_surface_energies := make([]float64, config.k)
+	for i := 0; i < config.k; i++ {
 		new_orientations[i] = new_rod.orientation
+		surface_energy := config.M * CalcSurfaceEnergy(new_rod, config)
 		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
 		if no_overlaps {
-			new_weights[i] = 1
-			new_weight_sum += 1
+			p := math.Exp(-config.beta * surface_energy)
+			// fmt.Printf("New Surface Energy: %f\n", surface_energy)
+			new_weights[i] = p
+			new_weight_sum += p
+			new_surface_energies[i] = surface_energy
 		} else {
+			// fmt.Printf("New Surface Energy: %f\n", surface_energy+10e8)
 			new_weights[i] = 0
+			new_surface_energies[i] = surface_energy + 10e8
 		}
 
-		if i != (k - 1) {
+		if i != (config.k - 1) {
 			GetRandOrientation(config.restrict_orientations, new_rod)
 			GetAxes(new_rod)
 			GetVertices(config.n_dim, config.n_vertices, new_rod)
@@ -179,44 +188,38 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	}
 
 	// select new configuration
-	new_rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
+	var new_surface_energy float64
+	new_rod.orientation, new_surface_energy = SelectWeightedConfig(new_orientations, new_surface_energies, new_weights, new_weight_sum, config.k)
 
 	// run k-1 rosenbluth trials to generate weights for original configuration
-	var og_weight_sum float64 = 1
-	for i := 0; i < (k - 1); i++ {
+	var og_weight_sum float64 = math.Exp(-config.beta * og_surface_energy)
+	for i := 0; i < (config.k - 1); i++ {
 		GetRandOrientation(config.restrict_orientations, og_rod)
 		GetAxes(og_rod)
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
 		if no_overlaps {
-			og_weight_sum += 1
+			surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+			og_weight_sum += math.Exp(-config.beta * surface_energy)
 		}
 	}
 
 	// calculate acceptance probability for rotation
-	acc := new_weight_sum / og_weight_sum
+	var acc float64
+	if config.k == 1 {
+		acc = math.Exp(-config.beta * (new_surface_energy - og_surface_energy))
+	} else {
+		acc = (og_weight_sum / new_weight_sum) * math.Exp(-config.beta*(new_surface_energy-og_surface_energy))
+	}
+	// fmt.Printf("acceptance probability: %f\n", acc)
 	if rand.Float64() < acc {
 		// move accepted
 		GetAxes(new_rod)
 		GetVertices(config.n_dim, config.n_vertices, new_rod)
 		rods[rod.id] = new_rod
 		config.rotation_successes++
-		if rods[rod.id].orientation == 0. {
-			config.n_rot_0++
-		} else if rods[rod.id].orientation == 60. {
-			config.n_rot_60++
-		} else if rods[rod.id].orientation == 120. {
-			config.n_rot_120++
-		}
 	}
 	config.rotation_attempts++
-	if new_rod.orientation == 0. {
-		config.n_attempt_0++
-	} else if new_rod.orientation == 60. {
-		config.n_attempt_60++
-	} else if new_rod.orientation == 120. {
-		config.n_attempt_120++
-	}
 }
 
 func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
@@ -261,7 +264,8 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 	}
 
 	// select new configuration
-	rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
+	rod.orientation = new_orientations[0]
+	// rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
 
 	// calculate acceptance probability for insertion
 	N := float64(config.n_rods)

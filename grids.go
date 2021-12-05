@@ -31,5 +31,5 @@ func GetGridNeighbors(x int, y int, n_bins int, grid_space *GridSpace) {
 
 func GridInit(x int, y int, n_bins int, grid_space *GridSpace) {
 	GetGridNeighbors(x, y, n_bins, grid_space)
-	grid_space.rod_neighbors = make([]int, 0, 40)
+	grid_space.rod_neighbors = make([]int, 0, 80)
 }

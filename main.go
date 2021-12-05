@@ -60,99 +60,24 @@ func main() {
 		}
 	}
 
-	// WriteTraj(rods, "rod_init.dat")
+	// Dev
+	// var writer *bufio.Writer
+	// out_file, err := os.Create("test_swap_k1.dat")
+	// Check(err)
+	// defer out_file.Close()
+	// writer = bufio.NewWriter(out_file)
+	// _, err = writer.WriteString("x,y,orientation\n")
+	// Check(err)
+	// for i := 0; i < 1000000; i++ {
+	// 	rod := GetRandRod(rods)
+	// 	// fmt.Printf("beta: %f\n", config.beta)
+	// 	Swap(rod, grid, &config, rods)
+	// 	_, err = writer.WriteString(fmt.Sprintf("%.3f,%.3f,%.3f\n", rod.loc[0], rod.loc[1], rod.orientation))
+	// }
+	// writer.Flush()
 
-	// TROUBLESHOOTING VERTICES & ROD WIDTH AFTER ROTATIONS
-	// rods[0].loc = []float64{5., 5.}
-	// // rods[0].orientation = (-math.Pi / 6) * (180 / math.Pi)
-	// rods[0].orientation = 120.
-	// GetAxes(rods[0])
-	// GetVertices(config.n_dim, config.n_vertices, rods[0])
-	// short_axis_length := math.Sqrt(math.Pow(rods[0].short_axis[0], 2) + math.Pow(rods[0].short_axis[1], 2))
-	// fmt.Println("pos", rods[0].loc[0], rods[0].loc[1])
-	// fmt.Println("long", rods[0].long_axis)
-	// fmt.Println("short", rods[0].short_axis)
-	// fmt.Println("short length", short_axis_length)
-	// fmt.Println("rod mat", rods[0].rot_mat)
-	// fmt.Println("og vertices", rods[0].vertical_vertices)
-	// fmt.Println("vertices", rods[0].rotated_vertices)
-	// width1 := math.Sqrt(math.Pow(rods[0].rotated_vertices[6]-rods[0].rotated_vertices[0], 2) + math.Pow(rods[0].rotated_vertices[7]-rods[0].rotated_vertices[1], 2))
-	// width2 := math.Sqrt(math.Pow(rods[0].rotated_vertices[4]-rods[0].rotated_vertices[2], 2) + math.Pow(rods[0].rotated_vertices[5]-rods[0].rotated_vertices[3], 2))
-	// length1 := math.Sqrt(math.Pow(rods[0].rotated_vertices[2]-rods[0].rotated_vertices[0], 2) + math.Pow(rods[0].rotated_vertices[3]-rods[0].rotated_vertices[1], 2))
-	// length2 := math.Sqrt(math.Pow(rods[0].rotated_vertices[4]-rods[0].rotated_vertices[6], 2) + math.Pow(rods[0].rotated_vertices[5]-rods[0].rotated_vertices[7], 2))
-	// fmt.Println("width1", width1)
-	// fmt.Println("width2", width2)
-	// fmt.Println("length1", length1)
-	// fmt.Println("length2", length2)
-
-	// fmt.Println()
-	// // correct width 1
-	// offset := width1 - 1.0
-	// offsetY := rods[0].short_axis[1] * offset
-	// y := rods[0].rotated_vertices[7]
-	// y_adjusted := y - offsetY
-	// fmt.Printf("offsetY - %.120f\n", offsetY)
-	// fmt.Printf("original y - %.120f\n", y)
-	// fmt.Printf("adjusted y - %.120f\n", y_adjusted)
-	// fmt.Println()
-
-	// offsetX := rods[0].short_axis[0] * offset
-	// x := rods[0].rotated_vertices[6]
-	// x_adjusted := x - offsetX
-	// fmt.Printf("offsetX - %.120f\n", offsetX)
-	// fmt.Printf("original x - %.120f\n", x)
-	// fmt.Printf("adjusted x - %.120f\n", x_adjusted)
-	// fmt.Println()
-
-	// fmt.Printf("y2 - %.120f\n", rods[0].rotated_vertices[7])
-	// Y2 := rods[0].rotated_vertices[7] - offsetY
-	// fmt.Printf("Y2 - %.120f\n", Y2)
-	// fmt.Println(rods[0].rotated_vertices[0], rods[0].rotated_vertices[1])
-	// fmt.Println()
-	// // new_width1 := math.Sqrt(math.Pow(rods[0].rotated_vertices[6]-rods[0].rotated_vertices[0], 2) + math.Pow(rods[0].rotated_vertices[7]-rods[0].rotated_vertices[1], 2))
-	// fmt.Println("width1", width1)
-	// // fmt.Println("new width1", new_width1)
-	// fmt.Println("width2", width2)
-	// fmt.Println("length1", length1)
-	// fmt.Println("length2", length2)
-
-	// fmt.Println("0 Select Rate -", config.n_rot_0/config.n_attempt_0*100)
-	// fmt.Println("60 Select Rate -", config.n_rot_60/config.n_attempt_60*100)
-	// fmt.Println("120 Select Rate -", config.n_rot_120/config.n_attempt_120*100)
-	// fmt.Println("0 attempts -", config.n_attempt_0)
-	// fmt.Println("60 attempts -", config.n_attempt_60)
-	// fmt.Println("120 attempts -", config.n_attempt_120)
-
-	// TROUBLESHOOTING CHECK OVERLAP
-	// r_short := 0.
-	// r_long := 8.99999999999999
-	// short_theta := math.Pi / 2
-	// long_theta := math.Pi / 3
-	// new_orientation := 120.
-
-	// rods[0].orientation = new_orientation
-	// rods[0].loc = []float64{50., 50.}
-	// GetAxes(rods[0])
-	// GetVertices(config.n_dim, config.n_vertices, rods[0])
-
-	// v_short := [2]float64{r_short * math.Sin(short_theta), r_short * math.Cos(short_theta)}
-	// v_long := [2]float64{r_long * math.Sin(long_theta), r_long * math.Cos(long_theta)}
-	// new_loc := make([]float64, config.n_dim)
-	// new_loc[0] = rods[0].loc[0] + v_short[0] + v_long[0]
-	// new_loc[1] = rods[0].loc[0] + v_short[1] + v_long[1]
-	// rods[1].orientation = new_orientation
-	// rods[1].loc = new_loc
-	// GetAxes(rods[1])
-	// GetVertices(config.n_dim, config.n_vertices, rods[1])
-
-	// fmt.Println(rods[0].loc)
-	// fmt.Println(rods[1].loc)
-
-	// overlap := CheckOverlapTS(rods[0], rods[1], &config)
-	// fmt.Println(overlap)
-
+	// Prod
 	MonteCarlo(&rods, grid, &config)
-
 	fmt.Println(config.swap_successes / config.swap_attempts * 100)
 	fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
 	fmt.Println(config.translation_successes / config.translation_attempts * 100)

@@ -39,6 +39,10 @@ type Config struct {
 	avail_rod_ids         []int
 	next_unused_rod_id    int
 
+	M               float64
+	r_prime         float64
+	overlap_penalty float64
+
 	swap_successes        float64
 	swap_attempts         float64
 	insertion_successes   float64
@@ -50,13 +54,6 @@ type Config struct {
 	translation_successes float64
 	translation_attempts  float64
 
-	n_attempt_0   float64
-	n_attempt_60  float64
-	n_attempt_120 float64
-	n_rot_0       float64
-	n_rot_60      float64
-	n_rot_120     float64
-
 	write_CVs       bool
 	write_traj      bool
 	write_CV_freq   int
@@ -64,7 +61,9 @@ type Config struct {
 	CV_out          string
 	traj_out        string
 
-	print_proj bool
+	n_overlap_checks_per_rod []float64
+	n_neighbors_per_rod      []float64
+	print_proj               bool
 }
 
 func Check(e error) {
@@ -96,7 +95,7 @@ func RotateVector(v [2]float64, rot float64) (v_out []float64) {
 	return
 }
 
-func SelectWeightedConfig(config_list []float64, weights []float64, weights_sum float64, k int) float64 {
+func SelectWeightedConfig(config_list []float64, value_list []float64, weights []float64, weights_sum float64, k int) (float64, float64) {
 	rand_weight := rand.Float64() * weights_sum
 	var running_weight float64 = 0
 	idx_sel := k - 1
@@ -108,7 +107,8 @@ func SelectWeightedConfig(config_list []float64, weights []float64, weights_sum 
 		}
 	}
 	selected_config := config_list[idx_sel]
-	return selected_config
+	selected_value := value_list[idx_sel]
+	return selected_config, selected_value
 }
 
 func RodDeepCopy(rod *Rod) *Rod {
@@ -171,6 +171,12 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "mu" {
 					config.mu, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
+				} else if key == "M" {
+					config.M, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
+				} else if key == "r_prime" {
+					config.r_prime, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
 				} else if key == "n_cycles" {
 					config.n_cycles, ke = strconv.Atoi(value)
 					Check(ke)
@@ -217,8 +223,9 @@ func ReadConfig(fn string) (config Config, err error) {
 		config.grid_bins = append(config.grid_bins, config.grid_spacing*float64(i+1))
 	}
 	config.n_grids = int(math.Pow(float64(config.n_bins), 2))
-	config.kb = 1
+	config.kb = 0.1
 	config.beta = 1 / (config.temp * config.kb)
+	config.overlap_penalty = 1000000000000
 	config.next_unused_rod_id = config.n_rods
 
 	config.swap_successes = 0
@@ -232,12 +239,6 @@ func ReadConfig(fn string) (config Config, err error) {
 	config.translation_successes = 0
 	config.translation_attempts = 0
 
-	config.n_attempt_0 = 0
-	config.n_attempt_60 = 0
-	config.n_attempt_120 = 0
-	config.n_rot_0 = 0
-	config.n_rot_60 = 0
-	config.n_rot_120 = 0
 	config.print_proj = false
 
 	return

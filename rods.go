@@ -232,11 +232,29 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 
 func CheckNeighborOverlaps(rod *Rod, grid []*GridSpace, rods []*Rod, config *Config) bool {
 	rod_neighbors := grid[rod.grid_id].rod_neighbors
+	// rod_neighbor_count := len(rod_neighbors)
+	// result := make(chan bool)
+	// for i := 0; i < rod_neighbor_count; i++ {
+	// 	go func(rod1 *Rod, rod2 *Rod, config *Config) {
+	// 		overlap := CheckOverlap(rod1, rod2, config)
+	// 		result <- overlap
+	// 	}(rod, rods[grid[rod.grid_id].rod_neighbors[i]], config)
+	// }
+	// overlaps := false
+	// for i := 0; i < rod_neighbor_count; i++ {
+	// 	is_overlap := <-result
+	// 	if is_overlap {
+	// 		overlaps = true
+	// 	}
+	// }
+	// return !overlaps
 	no_overlaps := true
 	for i := 0; i < len(rod_neighbors); i++ {
 		overlap := CheckOverlap(rod, rods[grid[rod.grid_id].rod_neighbors[i]], config)
 		if overlap {
 			no_overlaps = false
+			config.n_overlap_checks_per_rod = append(config.n_overlap_checks_per_rod, float64(i+1))
+			config.n_neighbors_per_rod = append(config.n_neighbors_per_rod, float64(len(rod_neighbors)))
 			return no_overlaps
 		}
 	}
