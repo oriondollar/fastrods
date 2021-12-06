@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -246,14 +247,19 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 	new_weights := make([]float64, k)
 	var new_weight_sum float64 = 0
 	new_orientations := make([]float64, k)
+	new_surface_energies := make([]float64, k)
 	for i := 0; i < k; i++ {
 		new_orientations[i] = rod.orientation
+		surface_energy := config.M * CalcSurfaceEnergy(rod, config)
 		no_overlaps := CheckNeighborOverlaps(rod, grid, *rods, config)
 		if no_overlaps {
-			new_weights[i] = 1
-			new_weight_sum += 1
+			p := math.Exp(-config.beta * surface_energy)
+			new_weights[i] = p
+			new_weight_sum += p
+			new_surface_energies[i] = surface_energy
 		} else {
 			new_weights[i] = 0
+			new_surface_energies[i] = surface_energy + 10e8
 		}
 
 		if i != (k - 1) {
@@ -264,12 +270,14 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 	}
 
 	// select new configuration
-	rod.orientation = new_orientations[0]
-	// rod.orientation = SelectWeightedConfig(new_orientations, new_weights, new_weight_sum, k)
+	var new_surface_energy float64
+	rod.orientation, new_surface_energy = SelectWeightedConfig(new_orientations, new_surface_energies, new_weights, new_weight_sum, k)
 
 	// calculate acceptance probability for insertion
 	N := float64(config.n_rods)
-	acc := (config.V * math.Exp(config.beta*config.mu) / (N + 1)) * (new_weight_sum / float64(k))
+	acc := (config.V * math.Exp(config.beta*(config.mu-new_surface_energy)) / (N + 1)) * (new_weight_sum / float64(k))
+	fmt.Println(new_surface_energy)
+	fmt.Println(acc)
 	if rand.Float64() < acc {
 		// move accepted
 		rod.exists = true
@@ -305,7 +313,8 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 func Delete(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// calculate acceptance probability for deletion
 	N := float64(config.n_rods)
-	acc := (N / (config.V * math.Exp(config.beta*config.mu)))
+	surface_energy := config.M * CalcSurfaceEnergy(rod, config)
+	acc := (N / (config.V * math.Exp(config.beta*(config.mu-surface_energy))))
 	if rand.Float64() < acc {
 		// if delete then remove rod from nearest neighbors lists
 		RemFromNeighborLists(rod, grid)
