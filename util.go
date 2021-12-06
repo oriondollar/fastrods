@@ -223,7 +223,7 @@ func ReadConfig(fn string) (config Config, err error) {
 		config.grid_bins = append(config.grid_bins, config.grid_spacing*float64(i+1))
 	}
 	config.n_grids = int(math.Pow(float64(config.n_bins), 2))
-	config.kb = 0.1
+	config.kb = 1
 	config.beta = 1 / (config.temp * config.kb)
 	config.overlap_penalty = 1000000000000
 	config.next_unused_rod_id = config.n_rods

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 )
@@ -275,9 +274,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 
 	// calculate acceptance probability for insertion
 	N := float64(config.n_rods)
-	acc := (config.V * math.Exp(config.beta*(config.mu-new_surface_energy)) / (N + 1)) * (new_weight_sum / float64(k))
-	fmt.Println(new_surface_energy)
-	fmt.Println(acc)
+	acc := (config.V * math.Exp(config.beta*(config.mu-new_surface_energy)) / (N + 1))
 	if rand.Float64() < acc {
 		// move accepted
 		rod.exists = true

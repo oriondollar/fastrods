@@ -17,5 +17,5 @@ func CalcSurfaceEnergy(rod *Rod, config *Config) float64 {
 	dl_energy := math.Pow(v3[0]*rod.long_axis[0]+v3[1]*rod.long_axis[1], 2)
 	energy_arr := []float64{up_energy, dr_energy, dl_energy}
 	_, max_energy := MinMax(energy_arr)
-	return max_energy - 1.
+	return max_energy - 0.5
 }
