@@ -61,9 +61,7 @@ type Config struct {
 	CV_out          string
 	traj_out        string
 
-	n_overlap_checks_per_rod []float64
-	n_neighbors_per_rod      []float64
-	print_proj               bool
+	print_proj bool
 }
 
 func Check(e error) {

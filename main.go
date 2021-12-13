@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	// _ "net/http/pprof"
 )
 
 var (
@@ -13,6 +14,9 @@ var (
 
 func main() {
 	// defer profile.Start(profile.TraceProfile, profile.ProfilePath(".")).Stop()
+	// go func() {
+	// 	log.Println(http.ListenAndServe("localhost:8080", nil))
+	// }()
 
 	fmt.Println("starting program...")
 	// seed random number generator

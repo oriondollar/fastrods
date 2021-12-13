@@ -253,8 +253,6 @@ func CheckNeighborOverlaps(rod *Rod, grid []*GridSpace, rods []*Rod, config *Con
 		overlap := CheckOverlap(rod, rods[grid[rod.grid_id].rod_neighbors[i]], config)
 		if overlap {
 			no_overlaps = false
-			config.n_overlap_checks_per_rod = append(config.n_overlap_checks_per_rod, float64(i+1))
-			config.n_neighbors_per_rod = append(config.n_neighbors_per_rod, float64(len(rod_neighbors)))
 			return no_overlaps
 		}
 	}
@@ -272,7 +270,10 @@ func RemFromNeighborLists(rod *Rod, grid []*GridSpace) {
 				break
 			}
 		}
-		grid[grid_id].rod_neighbors = append(grid[grid_id].rod_neighbors[:cur_rod_idx], grid[grid_id].rod_neighbors[cur_rod_idx+1:]...)
+		new_rod_neighbors := make([]int, 0)
+		new_rod_neighbors = append(new_rod_neighbors, grid[grid_id].rod_neighbors[:cur_rod_idx]...)
+		new_rod_neighbors = append(new_rod_neighbors, grid[grid_id].rod_neighbors[cur_rod_idx+1:]...)
+		grid[grid_id].rod_neighbors = new_rod_neighbors
 	}
 }
 
