@@ -31,8 +31,8 @@ func main() {
 	fmt.Println("initializing grid...")
 	grid := make([]*GridSpace, config.n_grids)
 	for i := 0; i < config.n_grids; i++ {
-		x := i % config.n_bins
-		y := i / config.n_bins
+		x := i % config.n_bins[0]
+		y := i / config.n_bins[1]
 		grid[i] = &GridSpace{}
 		GridInit(x, y, config.n_bins, grid[i])
 	}
@@ -82,10 +82,9 @@ func main() {
 
 	// Prod
 	MonteCarlo(&rods, grid, &config)
-	fmt.Println(config.swap_successes / config.swap_attempts * 100)
-	fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
-	fmt.Println(config.translation_successes / config.translation_attempts * 100)
-	fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
-	fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
-
+	// fmt.Println(config.swap_successes / config.swap_attempts * 100)
+	// fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
+	// fmt.Println(config.translation_successes / config.translation_attempts * 100)
+	// fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
+	// fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
 }

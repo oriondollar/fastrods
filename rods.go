@@ -62,31 +62,38 @@ func GetRandOrientation(restricted bool, rod *Rod) {
 	}
 }
 
-func GetGridID(box_length float64, n_bins int, grid_bins *[]float64, rod *Rod) {
+func GetGridID(box_dims []float64, n_bins []int, grid_bins [][]float64, rod *Rod) {
 	x := rod.loc[0]
 	y := rod.loc[1]
-	if x > box_length {
-		x -= box_length
+	if x > box_dims[0] {
+		x -= box_dims[0]
 	} else if x < 0 {
-		x += box_length
+		x += box_dims[0]
 	}
-	if y > box_length {
-		y -= box_length
+	if y > box_dims[1] {
+		y -= box_dims[1]
 	} else if y < 0 {
-		y += box_length
+		y += box_dims[1]
 	}
 
 	found_x := false
 	found_y := false
-	x_bin := n_bins - 1
-	y_bin := n_bins - 1
-	for i := 0; i < (n_bins - 1); i++ {
-		bin := (*grid_bins)[i]
-		if (x < bin) && (!found_x) {
+	x_bin := n_bins[0] - 1
+	y_bin := n_bins[1] - 1
+	var bins_iter int
+	if x_bin < y_bin {
+		bins_iter = y_bin
+	} else {
+		bins_iter = x_bin
+	}
+	for i := 0; i < (bins_iter - 1); i++ {
+		binx := grid_bins[0][i]
+		biny := grid_bins[1][i]
+		if (x < binx) && (!found_x) {
 			x_bin = i
 			found_x = true
 		}
-		if (y < bin) && (!found_y) {
+		if (y < biny) && (!found_y) {
 			y_bin = i
 			found_y = true
 		}
@@ -94,7 +101,7 @@ func GetGridID(box_length float64, n_bins int, grid_bins *[]float64, rod *Rod) {
 			break
 		}
 	}
-	rod.grid_id = x_bin + y_bin*n_bins
+	rod.grid_id = x_bin + y_bin*n_bins[1]
 }
 
 func GetAxes(rod *Rod) {
@@ -116,9 +123,9 @@ func GetVertices(n_dim int, n_vertices int, rod *Rod) {
 }
 
 func RodRefresh(config *Config, rod *Rod) {
-	GetRandLoc(config.n_dim, config.box_length, rod)
+	GetRandLoc(config.n_dim, config.box_size, rod)
 	GetRandOrientation(config.restrict_orientations, rod)
-	GetGridID(config.box_length, config.n_bins, &config.grid_bins, rod)
+	GetGridID(config.box_dims, config.n_bins, config.grid_bins, rod)
 	GetAxes(rod)
 	GetVertices(config.n_dim, config.n_vertices, rod)
 }
@@ -148,9 +155,9 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 	r[0] = rod1.loc[0] - rod2.loc[0]
 	r[1] = rod1.loc[1] - rod2.loc[1]
 	for d := 0; d < len(rod1.loc); d++ {
-		f := math.Round(r[d] / config.box_length)
+		f := math.Round(r[d] / config.box_size)
 		if math.Round(f) != 0 {
-			r[d] = r[d] - config.box_length*f
+			r[d] = r[d] - config.box_size*f
 			move_rod = true
 		}
 	}
@@ -203,9 +210,9 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 // 	r[0] = rod1.loc[0] - rod2.loc[0]
 // 	r[1] = rod1.loc[1] - rod2.loc[1]
 // 	for d := 0; d < len(rod1.loc); d++ {
-// 		f := math.Round(r[d] / config.box_length)
+// 		f := math.Round(r[d] / config.box_size)
 // 		if math.Round(f) != 0 {
-// 			r[d] = r[d] - config.box_length*f
+// 			r[d] = r[d] - config.box_size*f
 // 			move_rod = true
 // 		}
 // 	}

@@ -36,8 +36,8 @@ func GetDisplayGridPix(w, h int, x, y, box_length float64, xGridBins, yGridBins 
 }
 
 func getRodPix(w, h int, rods []*Rod, config *Config) ([]int, []int) {
-	xGridSpacing := float64(w) / config.box_length
-	yGridSpacing := float64(h) / config.box_length
+	xGridSpacing := float64(w) / config.box_size
+	yGridSpacing := float64(h) / config.box_size
 	xGridBins := make([]float64, w)
 	yGridBins := make([]float64, h)
 	for i := 0; i < w; i++ {
@@ -63,17 +63,17 @@ func getRodPix(w, h int, rods []*Rod, config *Config) ([]int, []int) {
 			v := [2]float64{x2 - x1, y2 - y1}
 			dx := v[0] * minSpacing
 			dy := v[1] * minSpacing
-			wpix, hpix := GetDisplayGridPix(w, h, x1, y1, config.box_length, xGridBins, yGridBins)
+			wpix, hpix := GetDisplayGridPix(w, h, x1, y1, config.box_size, xGridBins, yGridBins)
 			xPix = append(xPix, wpix)
 			yPix = append(yPix, hpix)
 			for j := 1; j < (nRodBins - 1); j++ {
 				new_x := x1 + dx*float64(j)
 				new_y := y1 + dy*float64(j)
-				wpix, hpix := GetDisplayGridPix(w, h, new_x, new_y, config.box_length, xGridBins, yGridBins)
+				wpix, hpix := GetDisplayGridPix(w, h, new_x, new_y, config.box_size, xGridBins, yGridBins)
 				xPix = append(xPix, wpix)
 				yPix = append(yPix, hpix)
 			}
-			wpix, hpix = GetDisplayGridPix(w, h, x2, y2, config.box_length, xGridBins, yGridBins)
+			wpix, hpix = GetDisplayGridPix(w, h, x2, y2, config.box_size, xGridBins, yGridBins)
 			xPix = append(xPix, wpix)
 			yPix = append(yPix, hpix)
 		}

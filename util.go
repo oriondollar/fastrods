@@ -18,17 +18,19 @@ type Config struct {
 	rod_width             float64
 	aspect_ratio          float64
 	n_vertices            int
-	box_length            float64
+	box_size           	  float64
+	box_dims			  []float64
 	V                     float64
 	nn_cutoff             float64
-	n_bins                int
-	grid_spacing          float64
+	n_bins                []int
+	grid_spacings         []float64
+	lattice_spacings	  []float64
 	n_grids               int
-	nn_window             int
-	grid_bins             []float64
+	grid_bins             [][]float64
 	mc_alg                string
 	cutoff_ratio          float64
 	restrict_orientations bool
+	restrict_translations bool
 	temp                  float64
 	kb                    float64
 	beta                  float64
@@ -40,6 +42,7 @@ type Config struct {
 	next_unused_rod_id    int
 
 	M               float64
+	bias 			float64
 	r_prime         float64
 	overlap_penalty float64
 
@@ -152,8 +155,8 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "aspect_ratio" {
 					config.aspect_ratio, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
-				} else if key == "box_length" {
-					config.box_length, ke = strconv.ParseFloat(value, 64)
+				} else if key == "box_size" {
+					config.box_size, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
 				} else if key == "mc_alg" {
 					config.mc_alg = value
@@ -163,6 +166,9 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "restrict_orientations" {
 					config.restrict_orientations, ke = strconv.ParseBool(value)
 					Check(ke)
+				} else if key == "restrict_translations" {
+					config.restrict_translations, ke = strconv.ParseBool(value)
+					Check(ke)
 				} else if key == "temp" {
 					config.temp, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
@@ -171,6 +177,9 @@ func ReadConfig(fn string) (config Config, err error) {
 					Check(ke)
 				} else if key == "M" {
 					config.M, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
+				} else if key == "bias"{
+					config.bias, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
 				} else if key == "r_prime" {
 					config.r_prime, ke = strconv.ParseFloat(value, 64)
@@ -210,17 +219,42 @@ func ReadConfig(fn string) (config Config, err error) {
 			return config, e
 		}
 	}
-	config.V = math.Pow(config.box_length, float64(config.n_dim))
+	// Rod Geometry
 	config.rod_width = config.rod_length / config.aspect_ratio
 	config.n_vertices = int(math.Pow(2, float64(config.n_dim)))
 	config.nn_cutoff = config.rod_length * config.cutoff_ratio
-	n_bins := math.Floor(config.box_length / config.rod_length)
-	config.grid_spacing = config.box_length / n_bins
-	config.n_bins = int(n_bins)
-	for i := 0; i < config.n_bins; i++ {
-		config.grid_bins = append(config.grid_bins, config.grid_spacing*float64(i+1))
+
+	// Lattice Geometry
+	config.box_dims = make([]float64, config.n_dim)
+	if config.restrict_translations == false {
+		for i := 0; i < config.n_dim; i++ {
+			config.box_dims[i] = config.box_size
+		}
 	}
-	config.n_grids = int(math.Pow(float64(config.n_bins), 2))
+	config.V = 1
+	config.n_bins = make([]int, config.n_dim)
+	config.grid_spacings = make([]float64, config.n_dim)
+	config.grid_bins = make([][]float64, config.n_dim)
+	config.n_grids = 1
+	for i := 0; i < config.n_dim; i++ {
+		config.V *= config.box_dims[i]
+		n_bins := math.Floor(config.box_dims[i] / config.rod_length)
+		config.grid_spacings[i] = config.box_dims[i] / n_bins
+		config.n_bins[i] = int(n_bins)
+		config.grid_bins[i] = make([]float64, config.n_bins[i])
+		for j := 0; j < config.n_bins[i]; j++ {
+			config.grid_bins[i][j] = config.grid_spacings[i]*float64(j+1)
+		}
+		config.n_grids *= config.n_bins[i]
+	}
+
+	// n_bins := math.Floor(config.box_size / config.rod_length)
+	// config.grid_spacing = config.box_size / n_bins
+	// config.n_bins = int(n_bins)
+	// for i := 0; i < config.n_bins; i++ {
+	// 	config.grid_bins = append(config.grid_bins, config.grid_spacing*float64(i+1))
+	// }
+	// config.n_grids = int(math.Pow(float64(config.n_bins), 2))
 	config.kb = 1
 	config.beta = 1 / (config.temp * config.kb)
 	config.overlap_penalty = 1000000000000

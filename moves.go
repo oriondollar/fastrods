@@ -15,8 +15,8 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
 
 	// move rod to new location
-	GetRandLoc(config.n_dim, config.box_length, new_rod)
-	GetGridID(config.box_length, config.n_bins, &config.grid_bins, new_rod)
+	GetRandLoc(config.n_dim, config.box_size, new_rod)
+	GetGridID(config.box_dims, config.n_bins, config.grid_bins, new_rod)
 	new_grid_id := new_rod.grid_id
 
 	// run k rosenbluth trials to generate swap weights (new location - new orientations)
@@ -104,20 +104,20 @@ func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_loc := make([]float64, config.n_dim)
 	new_loc[0] = og_loc[0] + v[0]
 	new_loc[1] = og_loc[1] + v[1]
-	if new_loc[0] > config.box_length {
-		new_loc[0] -= config.box_length
+	if new_loc[0] > config.box_size {
+		new_loc[0] -= config.box_size
 	}
-	if new_loc[1] > config.box_length {
-		new_loc[1] -= config.box_length
+	if new_loc[1] > config.box_size {
+		new_loc[1] -= config.box_size
 	}
 	if new_loc[0] < 0 {
-		new_loc[0] += config.box_length
+		new_loc[0] += config.box_size
 	}
 	if new_loc[1] < 0 {
-		new_loc[1] += config.box_length
+		new_loc[1] += config.box_size
 	}
 	rod.loc = new_loc
-	GetGridID(config.box_length, config.n_bins, &config.grid_bins, rod)
+	GetGridID(config.box_dims, config.n_bins, config.grid_bins, rod)
 	GetAxes(rod)
 	GetVertices(config.n_dim, config.n_vertices, rod)
 	new_grid_id := rod.grid_id
