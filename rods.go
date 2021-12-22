@@ -11,6 +11,8 @@ import (
 type Rod struct {
 	id                int
 	loc               []float64
+	lattice_x		  int
+	lattice_y 		  int
 	orientation       float64
 	length            float64
 	width             float64
@@ -36,26 +38,37 @@ func GetRandRod(rods []*Rod) (rod *Rod) {
 	return rod
 }
 
-func GetRandLoc(n_dim int, box_length float64, rod *Rod) {
-	x := rand.Float64() * box_length
-	y := rand.Float64() * box_length
-	if n_dim == 2 {
+func GetRandLoc(config *Config, rod *Rod) {
+	if !config.restrict_translations {
+		x := rand.Float64() * config.box_dims[0]
+		y := rand.Float64() * config.box_dims[1]
+		if config.n_dim == 2 {
+			rod.loc = []float64{x, y}
+		} else if config.n_dim == 3 {
+			z := rand.Float64() * config.box_dims[2]
+			rod.loc = []float64{x, y, z}
+		}
+	} else {
+		rand_lattice_x := rand.Intn(config.lattice_x)
+		rand_lattice_y := rand.Intn(config.lattice_y)
+		x := config.lattice_grid[rand_lattice_x][rand_lattice_y][0]
+		y := config.lattice_grid[rand_lattice_x][rand_lattice_y][1]
 		rod.loc = []float64{x, y}
-	} else if n_dim == 3 {
-		z := rand.Float64() * box_length
-		rod.loc = []float64{x, y, z}
+		rod.lattice_x = rand_lattice_x
+		rod.lattice_y = rand_lattice_y
 	}
+
 }
 
 func GetRandOrientation(restricted bool, rod *Rod) {
 	if restricted {
 		rand_w := rand.Float64()
 		if rand_w < (1. / 3.) {
-			rod.orientation = 0.
+			rod.orientation = 30.01
 		} else if rand_w < (2. / 3.) {
-			rod.orientation = 60.
+			rod.orientation = 90.01
 		} else {
-			rod.orientation = 120.
+			rod.orientation = 150.01
 		}
 	} else {
 		rod.orientation = rand.Float64() * 180
@@ -86,9 +99,19 @@ func GetGridID(box_dims []float64, n_bins []int, grid_bins [][]float64, rod *Rod
 	} else {
 		bins_iter = x_bin
 	}
-	for i := 0; i < (bins_iter - 1); i++ {
-		binx := grid_bins[0][i]
-		biny := grid_bins[1][i]
+	for i := 0; i < (bins_iter); i++ {
+		var binx float64
+		var biny float64
+		if !found_x {
+			binx = grid_bins[0][i]
+		} else {
+			binx = 0.
+		}
+		if !found_y {
+			biny = grid_bins[1][i]
+		} else {
+			biny = 0.
+		}
 		if (x < binx) && (!found_x) {
 			x_bin = i
 			found_x = true
@@ -101,7 +124,7 @@ func GetGridID(box_dims []float64, n_bins []int, grid_bins [][]float64, rod *Rod
 			break
 		}
 	}
-	rod.grid_id = x_bin + y_bin*n_bins[1]
+	rod.grid_id = x_bin + y_bin*n_bins[0]
 }
 
 func GetAxes(rod *Rod) {
@@ -123,7 +146,7 @@ func GetVertices(n_dim int, n_vertices int, rod *Rod) {
 }
 
 func RodRefresh(config *Config, rod *Rod) {
-	GetRandLoc(config.n_dim, config.box_size, rod)
+	GetRandLoc(config, rod)
 	GetRandOrientation(config.restrict_orientations, rod)
 	GetGridID(config.box_dims, config.n_bins, config.grid_bins, rod)
 	GetAxes(rod)
@@ -150,14 +173,17 @@ func CheckOverlap(rod1 *Rod, rod2 *Rod, config *Config) bool {
 	if rod1.id == rod2.id {
 		return false
 	}
+	if (rod1.loc[0] == rod2.loc[0]) && (rod1.loc[1] == rod2.loc[1]) {
+		return true
+	}
 	move_rod := false
 	var r [2]float64
 	r[0] = rod1.loc[0] - rod2.loc[0]
 	r[1] = rod1.loc[1] - rod2.loc[1]
 	for d := 0; d < len(rod1.loc); d++ {
-		f := math.Round(r[d] / config.box_size)
+		f := math.Round(r[d] / config.box_dims[d])
 		if math.Round(f) != 0 {
-			r[d] = r[d] - config.box_size*f
+			r[d] = r[d] - config.box_dims[d]*f
 			move_rod = true
 		}
 	}

@@ -25,7 +25,7 @@ func GetGridNeighbors(x int, y int, n_bins []int, grid_space *GridSpace) {
 	i := 0
 	for n := 0; n < 3; n++ {
 		for l := 0; l < 3; l++ {
-			grid_space.grid_neighbors[i] = x_neighbors[n] + y_neighbors[l]*y_bins
+			grid_space.grid_neighbors[i] = x_neighbors[n] + y_neighbors[l]*x_bins
 			i++
 		}
 	}

@@ -15,7 +15,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
 
 	// move rod to new location
-	GetRandLoc(config.n_dim, config.box_size, new_rod)
+	GetRandLoc(config, new_rod)
 	GetGridID(config.box_dims, config.n_bins, config.grid_bins, new_rod)
 	new_grid_id := new_rod.grid_id
 
@@ -96,26 +96,62 @@ func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	og_grid_id := rod.grid_id
 
 	// get new location within 1 distance away from current rod COM
-	var max_r float64 = 1
-	max_theta := 2 * math.Pi
-	r := rand.Float64() * max_r
-	theta := rand.Float64() * max_theta
-	v := [2]float64{r * math.Sin(theta), r * math.Cos(theta)}
 	new_loc := make([]float64, config.n_dim)
-	new_loc[0] = og_loc[0] + v[0]
-	new_loc[1] = og_loc[1] + v[1]
-	if new_loc[0] > config.box_size {
-		new_loc[0] -= config.box_size
+	if !config.restrict_translations {
+		var max_r float64 = 1
+		max_theta := 2 * math.Pi
+		r := rand.Float64() * max_r
+		theta := rand.Float64() * max_theta
+		v := [2]float64{r * math.Sin(theta), r * math.Cos(theta)}
+		new_loc[0] = og_loc[0] + v[0]
+		new_loc[1] = og_loc[1] + v[1]
+		if new_loc[0] >= config.box_dims[0] {
+			new_loc[0] -= config.box_dims[0]
+		}
+		if new_loc[1] >= config.box_dims[1] {
+			new_loc[1] -= config.box_dims[1]
+		}
+		if new_loc[0] < 0 {
+			new_loc[0] += config.box_dims[0]
+		}
+		if new_loc[1] < 0 {
+			new_loc[1] += config.box_dims[0]
+		}
+	} else {
+		rand_move_idx := rand.Intn(len(config.lattice_moves))
+		rand_move := config.lattice_moves[rand_move_idx]
+		new_lattice_x := rod.lattice_x + rand_move[0]
+		new_lattice_y := rod.lattice_y + rand_move[1]
+		if new_lattice_x >= config.lattice_x {
+			new_lattice_x -= config.lattice_x
+		}
+		if new_lattice_y >= config.lattice_y {
+			new_lattice_y -= config.lattice_y
+		}
+		if new_lattice_x < 0 {
+			new_lattice_x += config.lattice_x
+		}
+		if new_lattice_y < 0 {
+			new_lattice_y += config.lattice_y
+		}
+		rod.lattice_x = new_lattice_x
+		rod.lattice_y = new_lattice_y
+		new_loc[0] = config.lattice_grid[rod.lattice_x][rod.lattice_y][0]
+		new_loc[1] = config.lattice_grid[rod.lattice_x][rod.lattice_y][1]
+		if new_loc[0] > config.box_dims[0] {
+			new_loc[0] -= config.box_dims[0]
+		}
+		if new_loc[1] > config.box_dims[1] {
+			new_loc[1] -= config.box_dims[1]
+		}
+		if new_loc[0] < 0 {
+			new_loc[0] += config.box_dims[0]
+		}
+		if new_loc[1] < 0 {
+			new_loc[1] += config.box_dims[0]
+		}
 	}
-	if new_loc[1] > config.box_size {
-		new_loc[1] -= config.box_size
-	}
-	if new_loc[0] < 0 {
-		new_loc[0] += config.box_size
-	}
-	if new_loc[1] < 0 {
-		new_loc[1] += config.box_size
-	}
+
 	rod.loc = new_loc
 	GetGridID(config.box_dims, config.n_bins, config.grid_bins, rod)
 	GetAxes(rod)

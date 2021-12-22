@@ -30,11 +30,12 @@ func main() {
 	// initialize grid
 	fmt.Println("initializing grid...")
 	grid := make([]*GridSpace, config.n_grids)
-	for i := 0; i < config.n_grids; i++ {
-		x := i % config.n_bins[0]
-		y := i / config.n_bins[1]
-		grid[i] = &GridSpace{}
-		GridInit(x, y, config.n_bins, grid[i])
+	for x := 0; x < config.n_bins[0]; x++ {
+		for y := 0; y < config.n_bins[1]; y++ {
+			i := x + y * config.n_bins[0]
+			grid[i] = &GridSpace{}
+			GridInit(x, y, config.n_bins, grid[i])
+		}
 	}
 
 	// randomly place rods on surface
@@ -64,6 +65,14 @@ func main() {
 		}
 	}
 
+	// Prod
+	MonteCarlo(&rods, grid, &config)
+	// fmt.Println(config.swap_successes / config.swap_attempts * 100)
+	// fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
+	// fmt.Println(config.translation_successes / config.translation_attempts * 100)
+	// fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
+	// fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
+
 	// Dev
 	// var writer *bufio.Writer
 	// out_file, err := os.Create("test_swap_k1.dat")
@@ -79,12 +88,4 @@ func main() {
 	// 	_, err = writer.WriteString(fmt.Sprintf("%.3f,%.3f,%.3f\n", rod.loc[0], rod.loc[1], rod.orientation))
 	// }
 	// writer.Flush()
-
-	// Prod
-	MonteCarlo(&rods, grid, &config)
-	// fmt.Println(config.swap_successes / config.swap_attempts * 100)
-	// fmt.Println(config.rotation_successes / config.rotation_attempts * 100)
-	// fmt.Println(config.translation_successes / config.translation_attempts * 100)
-	// fmt.Println(config.insertion_successes / config.insertion_attempts * 100)
-	// fmt.Println(config.deletion_successes / config.deletion_attempts * 100)
 }

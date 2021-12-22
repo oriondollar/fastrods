@@ -31,6 +31,12 @@ type Config struct {
 	cutoff_ratio          float64
 	restrict_orientations bool
 	restrict_translations bool
+	grid_pattern		  string
+	facet_length		  float64
+	lattice_x			  int
+	lattice_y			  int
+	lattice_grid		  [][][]float64
+	lattice_moves		  [][]int
 	temp                  float64
 	kb                    float64
 	beta                  float64
@@ -169,6 +175,11 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "restrict_translations" {
 					config.restrict_translations, ke = strconv.ParseBool(value)
 					Check(ke)
+				} else if key == "grid_pattern" {
+					config.grid_pattern = value
+				} else if key == "facet_length" {
+					config.facet_length, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
 				} else if key == "temp" {
 					config.temp, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
@@ -229,6 +240,49 @@ func ReadConfig(fn string) (config Config, err error) {
 	if config.restrict_translations == false {
 		for i := 0; i < config.n_dim; i++ {
 			config.box_dims[i] = config.box_size
+		}
+	} else if config.restrict_translations == true {
+		if config.grid_pattern == "triangular" {
+			facet_height := math.Sqrt(3) / 2 * config.facet_length
+			dx := config.facet_length
+			dy := 2 * facet_height
+			lattice_x := math.Floor(config.box_size / dx)
+			lattice_y := 2 * math.Floor(config.box_size / dy)
+			config.box_dims[0] = lattice_x * dx
+			config.box_dims[1] = lattice_y * facet_height
+			config.lattice_x = int(lattice_x)
+			config.lattice_y = int(lattice_y)
+			config.lattice_grid = make([][][]float64, config.lattice_x)
+			for i := 0; i < config.lattice_x; i++ {
+				config.lattice_grid[i] = make([][]float64, config.lattice_y)
+				for j := 0; j < config.lattice_y; j++ {
+					config.lattice_grid[i][j] = make([]float64, config.n_dim)
+					var x_coord float64
+					var y_coord float64
+					if j % 2 == 0 {
+						x_coord = float64(i) * dx + (dx / 4)
+					} else {
+						x_coord = (float64(i) * dx) + (dx / 2 + dx / 4)
+					}
+					y_coord = float64(j) * (dy / 2) + (dy / 4)
+					config.lattice_grid[i][j][0] = x_coord
+					config.lattice_grid[i][j][1] = y_coord
+				}
+			}
+			lattice_moves := [11][2]int{{0, 0},
+										{0, 2}, {0, -2},
+										{1, 0}, {-1, 0},
+										{0, 1}, {0, -1},
+										{-1, 1}, {-1, -1},
+										{1, 1}, {1, -1}}
+			config.lattice_moves = make([][]int, 11)
+			for i := 0; i < 11; i++ {
+				config.lattice_moves[i] = make([]int, config.n_dim)
+				config.lattice_moves[i][0] = lattice_moves[i][0]
+				config.lattice_moves[i][1] = lattice_moves[i][1]
+			}
+		} else {
+			fmt.Println("Grid pattern must be triangular")
 		}
 	}
 	config.V = 1
