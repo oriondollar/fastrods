@@ -56,6 +56,7 @@ func main() {
 			no_overlaps = CheckNeighborOverlaps(rods[i], grid, rods, &config)
 		}
 		rods[i].exists = true
+		config.potential_energy += CalcSurfaceEnergy(rods[i], &config)
 
 		// add rod to neighbor list of each neighboring grid
 		gridspace := grid[rods[i].grid_id]

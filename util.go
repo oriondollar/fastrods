@@ -18,29 +18,33 @@ type Config struct {
 	rod_width             float64
 	aspect_ratio          float64
 	n_vertices            int
+
 	box_size           	  float64
 	box_dims			  []float64
 	V                     float64
 	nn_cutoff             float64
 	n_bins                []int
 	grid_spacings         []float64
-	lattice_spacings	  []float64
 	n_grids               int
 	grid_bins             [][]float64
+
 	mc_alg                string
 	cutoff_ratio          float64
 	restrict_orientations bool
 	restrict_translations bool
-	grid_pattern		  string
+
+	lattice_pattern		  string
 	facet_length		  float64
 	lattice_x			  int
 	lattice_y			  int
 	lattice_grid		  [][][]float64
 	lattice_moves		  [][]int
+
 	temp                  float64
 	kb                    float64
 	beta                  float64
 	mu                    float64
+
 	n_cycles              int
 	n_insert_deletes      int
 	k                     int
@@ -52,6 +56,7 @@ type Config struct {
 	r_prime         float64
 	overlap_penalty float64
 
+	potential_energy	  float64
 	swap_successes        float64
 	swap_attempts         float64
 	insertion_successes   float64
@@ -175,8 +180,8 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "restrict_translations" {
 					config.restrict_translations, ke = strconv.ParseBool(value)
 					Check(ke)
-				} else if key == "grid_pattern" {
-					config.grid_pattern = value
+				} else if key == "lattice_pattern" {
+					config.lattice_pattern = value
 				} else if key == "facet_length" {
 					config.facet_length, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
@@ -242,7 +247,7 @@ func ReadConfig(fn string) (config Config, err error) {
 			config.box_dims[i] = config.box_size
 		}
 	} else if config.restrict_translations == true {
-		if config.grid_pattern == "triangular" {
+		if config.lattice_pattern == "triangular" {
 			facet_height := math.Sqrt(3) / 2 * config.facet_length
 			dx := config.facet_length
 			dy := 2 * facet_height
@@ -314,6 +319,7 @@ func ReadConfig(fn string) (config Config, err error) {
 	config.overlap_penalty = 1000000000000
 	config.next_unused_rod_id = config.n_rods
 
+	config.potential_energy = 0
 	config.swap_successes = 0
 	config.swap_attempts = 0
 	config.insertion_successes = 0

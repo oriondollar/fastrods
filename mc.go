@@ -21,7 +21,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		defer CV_file.Close()
 
 		CV_writer = bufio.NewWriter(CV_file)
-		_, err = CV_writer.WriteString("cycle,S,density\n")
+		_, err = CV_writer.WriteString("cycle,S,density,energy\n")
 		Check(err)
 	}
 
@@ -69,7 +69,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		if (config.write_CVs) && ((i+1)%config.write_CV_freq == 0) {
 			density := CalcDensity(config)
 			S := CalcS(*rods, config)
-			_, err = CV_writer.WriteString(fmt.Sprintf("%v,%.3f,%.3f\n", i, S, density))
+			_, err = CV_writer.WriteString(fmt.Sprintf("%v,%.3f,%.3f,%.3f\n", i, S, density, config.potential_energy))
 			Check(err)
 		}
 		if (config.write_traj) && ((i+1)%config.write_traj_freq == 0) {

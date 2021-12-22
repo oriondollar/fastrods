@@ -12,7 +12,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_rod := RodDeepCopy(rod)
 
 	// calculate initial surface energy
-	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+	og_surface_energy := CalcSurfaceEnergy(og_rod, config)
 
 	// move rod to new location
 	GetRandLoc(config, new_rod)
@@ -29,7 +29,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_surface_energies := make([]float64, config.k)
 	for i := 0; i < config.k; i++ {
 		new_orientations[i] = new_rod.orientation
-		surface_energy := config.M * CalcSurfaceEnergy(new_rod, config)
+		surface_energy := CalcSurfaceEnergy(new_rod, config)
 		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
 		if no_overlaps {
 			p := math.Exp(-config.beta * surface_energy)
@@ -60,7 +60,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
 		if no_overlaps {
-			surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+			surface_energy := CalcSurfaceEnergy(og_rod, config)
 			og_weight_sum += math.Exp(-config.beta * surface_energy)
 		}
 	}
@@ -85,6 +85,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 			AddToNeighborLists(new_rod, grid)
 			rods[rod.id] = new_rod
 		}
+		config.potential_energy += (new_surface_energy - og_surface_energy)
 		config.swap_successes++
 	}
 	config.swap_attempts++
@@ -189,7 +190,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_rod := RodDeepCopy(rod)
 
 	// calculate initial surface energy
-	og_surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+	og_surface_energy := CalcSurfaceEnergy(og_rod, config)
 	// fmt.Printf("Original Surface Energy: %f\n", og_surface_energy)
 
 	// run k rosenbluth trials to generate rotation weights (same location - new orientations)
@@ -202,7 +203,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_surface_energies := make([]float64, config.k)
 	for i := 0; i < config.k; i++ {
 		new_orientations[i] = new_rod.orientation
-		surface_energy := config.M * CalcSurfaceEnergy(new_rod, config)
+		surface_energy := CalcSurfaceEnergy(new_rod, config)
 		no_overlaps := CheckNeighborOverlaps(new_rod, grid, rods, config)
 		if no_overlaps {
 			p := math.Exp(-config.beta * surface_energy)
@@ -235,7 +236,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
 		if no_overlaps {
-			surface_energy := config.M * CalcSurfaceEnergy(og_rod, config)
+			surface_energy := CalcSurfaceEnergy(og_rod, config)
 			og_weight_sum += math.Exp(-config.beta * surface_energy)
 		}
 	}
@@ -253,6 +254,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetAxes(new_rod)
 		GetVertices(config.n_dim, config.n_vertices, new_rod)
 		rods[rod.id] = new_rod
+		config.potential_energy += (new_surface_energy - og_surface_energy)
 		config.rotation_successes++
 	}
 	config.rotation_attempts++
@@ -285,7 +287,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 	new_surface_energies := make([]float64, k)
 	for i := 0; i < k; i++ {
 		new_orientations[i] = rod.orientation
-		surface_energy := config.M * CalcSurfaceEnergy(rod, config)
+		surface_energy := CalcSurfaceEnergy(rod, config)
 		no_overlaps := CheckNeighborOverlaps(rod, grid, *rods, config)
 		if no_overlaps {
 			p := math.Exp(-config.beta * surface_energy)
@@ -334,6 +336,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 			config.next_unused_rod_id++
 			(*rods) = append((*rods), rod)
 		}
+		config.potential_energy += new_surface_energy
 		config.n_rods++
 		config.insertion_successes++
 	} else {
@@ -346,7 +349,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 func Delete(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// calculate acceptance probability for deletion
 	N := float64(config.n_rods)
-	surface_energy := config.M * CalcSurfaceEnergy(rod, config)
+	surface_energy := CalcSurfaceEnergy(rod, config)
 	acc := (N / (config.V * math.Exp(config.beta*(config.mu-surface_energy))))
 	if rand.Float64() < acc {
 		// if delete then remove rod from nearest neighbors lists
@@ -354,6 +357,7 @@ func Delete(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		// and remove from rod list
 		rod.exists = false
 		config.avail_rod_ids = append(config.avail_rod_ids, rod.id)
+		config.potential_energy -= surface_energy
 		config.n_rods--
 		config.deletion_successes++
 	}

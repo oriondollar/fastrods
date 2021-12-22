@@ -64,11 +64,11 @@ func GetRandOrientation(restricted bool, rod *Rod) {
 	if restricted {
 		rand_w := rand.Float64()
 		if rand_w < (1. / 3.) {
-			rod.orientation = 30.01
+			rod.orientation = 30.
 		} else if rand_w < (2. / 3.) {
-			rod.orientation = 90.01
+			rod.orientation = 90.
 		} else {
-			rod.orientation = 150.01
+			rod.orientation = 150.
 		}
 	} else {
 		rod.orientation = rand.Float64() * 180
