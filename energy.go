@@ -6,7 +6,7 @@ import (
 
 func CalcSurfaceEnergy(rod *Rod, config *Config) float64 {
 	rad := rod.orientation * PI / 180
-	v1 := (math.Cos(6*(rad+(PI/3))) + 1) / 8
+	v1 := (math.Cos(6*(rad+(PI/3))) + config.W) / 8
 	var v2 float64
 	if (rod.orientation < 15.) || (rod.orientation > 45.) {
 		v2 = 0.

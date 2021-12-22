@@ -11,8 +11,8 @@ import (
 type Rod struct {
 	id                int
 	loc               []float64
-	lattice_x		  int
-	lattice_y 		  int
+	lattice_x         int
+	lattice_y         int
 	orientation       float64
 	length            float64
 	width             float64
@@ -60,15 +60,23 @@ func GetRandLoc(config *Config, rod *Rod) {
 
 }
 
-func GetRandOrientation(restricted bool, rod *Rod) {
-	if restricted {
+func GetRandOrientation(config *Config, rod *Rod) {
+	if config.restrict_orientations {
 		rand_w := rand.Float64()
-		if rand_w < (1. / 3.) {
-			rod.orientation = 30.
-		} else if rand_w < (2. / 3.) {
-			rod.orientation = 90.
-		} else {
-			rod.orientation = 150.
+		if config.lattice_pattern == "triangular" {
+			if rand_w < (1. / 3.) {
+				rod.orientation = 30.
+			} else if rand_w < (2. / 3.) {
+				rod.orientation = 90.
+			} else {
+				rod.orientation = 150.
+			}
+		} else if config.lattice_pattern == "square" {
+			if rand_w < (1. / 2.) {
+				rod.orientation = 0.
+			} else {
+				rod.orientation = 90.
+			}
 		}
 	} else {
 		rod.orientation = rand.Float64() * 180
@@ -147,7 +155,7 @@ func GetVertices(n_dim int, n_vertices int, rod *Rod) {
 
 func RodRefresh(config *Config, rod *Rod) {
 	GetRandLoc(config, rod)
-	GetRandOrientation(config.restrict_orientations, rod)
+	GetRandOrientation(config, rod)
 	GetGridID(config.box_dims, config.n_bins, config.grid_bins, rod)
 	GetAxes(rod)
 	GetVertices(config.n_dim, config.n_vertices, rod)

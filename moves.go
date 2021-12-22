@@ -20,7 +20,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	new_grid_id := new_rod.grid_id
 
 	// run k rosenbluth trials to generate swap weights (new location - new orientations)
-	GetRandOrientation(config.restrict_orientations, new_rod)
+	GetRandOrientation(config, new_rod)
 	GetAxes(new_rod)
 	GetVertices(config.n_dim, config.n_vertices, new_rod)
 	new_weights := make([]float64, config.k)
@@ -42,7 +42,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		}
 
 		if i != (config.k - 1) {
-			GetRandOrientation(config.restrict_orientations, new_rod)
+			GetRandOrientation(config, new_rod)
 			GetAxes(new_rod)
 			GetVertices(config.n_dim, config.n_vertices, new_rod)
 		}
@@ -55,7 +55,7 @@ func Swap(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// run k-1 rosenbluth trials to generate weights for original configuration
 	var og_weight_sum float64 = math.Exp(-config.beta * og_surface_energy)
 	for i := 0; i < (config.k - 1); i++ {
-		GetRandOrientation(config.restrict_orientations, og_rod)
+		GetRandOrientation(config, og_rod)
 		GetAxes(og_rod)
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
@@ -194,7 +194,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// fmt.Printf("Original Surface Energy: %f\n", og_surface_energy)
 
 	// run k rosenbluth trials to generate rotation weights (same location - new orientations)
-	GetRandOrientation(config.restrict_orientations, new_rod)
+	GetRandOrientation(config, new_rod)
 	GetAxes(new_rod)
 	GetVertices(config.n_dim, config.n_vertices, new_rod)
 	new_weights := make([]float64, config.k)
@@ -218,7 +218,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		}
 
 		if i != (config.k - 1) {
-			GetRandOrientation(config.restrict_orientations, new_rod)
+			GetRandOrientation(config, new_rod)
 			GetAxes(new_rod)
 			GetVertices(config.n_dim, config.n_vertices, new_rod)
 		}
@@ -231,7 +231,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// run k-1 rosenbluth trials to generate weights for original configuration
 	var og_weight_sum float64 = math.Exp(-config.beta * og_surface_energy)
 	for i := 0; i < (config.k - 1); i++ {
-		GetRandOrientation(config.restrict_orientations, og_rod)
+		GetRandOrientation(config, og_rod)
 		GetAxes(og_rod)
 		GetVertices(config.n_dim, config.n_vertices, og_rod)
 		no_overlaps := CheckNeighborOverlaps(og_rod, grid, rods, config)
@@ -300,7 +300,7 @@ func Insert(grid []*GridSpace, config *Config, rods *[]*Rod) {
 		}
 
 		if i != (k - 1) {
-			GetRandOrientation(config.restrict_orientations, rod)
+			GetRandOrientation(config, rod)
 			GetAxes(rod)
 			GetVertices(config.n_dim, config.n_vertices, rod)
 		}

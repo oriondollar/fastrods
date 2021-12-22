@@ -14,6 +14,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 	// set up writers
 	var CV_writer *bufio.Writer
 	var traj_writer *bufio.Writer
+	var move_probs_writer *bufio.Writer
 	var err error
 	if config.write_CVs {
 		CV_file, err := os.Create(config.CV_out)
@@ -33,6 +34,15 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		traj_writer = bufio.NewWriter(traj_file)
 		_, err = traj_writer.WriteString("cycle,id,x,y,orientation\n")
 		Check(err)
+	}
+
+	if config.write_move_probs {
+		move_probs_file, err := os.Create(config.move_probs_out)
+		Check(err)
+		defer move_probs_file.Close()
+
+		move_probs_writer = bufio.NewWriter(move_probs_file)
+		_, err = move_probs_writer.WriteString("cycle,swap,rot,trans,insert,delete\n")
 	}
 
 	// MC loop
@@ -69,7 +79,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		if (config.write_CVs) && ((i+1)%config.write_CV_freq == 0) {
 			density := CalcDensity(config)
 			S := CalcS(*rods, config)
-			_, err = CV_writer.WriteString(fmt.Sprintf("%v,%.3f,%.3f,%.3f\n", i, S, density, config.potential_energy))
+			_, err = CV_writer.WriteString(fmt.Sprintf("%v,%.3f,%.3f,%.3f\n", i+1, S, density, config.potential_energy))
 			Check(err)
 		}
 		if (config.write_traj) && ((i+1)%config.write_traj_freq == 0) {
@@ -84,11 +94,23 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 				}
 			}
 		}
+		if (config.write_move_probs) && ((i+1)%config.write_move_probs_freq == 0) {
+			swap_prob := config.swap_successes / config.swap_attempts
+			rot_prob := config.rotation_successes / config.rotation_attempts
+			trans_prob := config.translation_successes / config.translation_attempts
+			insert_prob := config.insertion_successes / config.insertion_attempts
+			delete_prob := config.deletion_successes / config.deletion_attempts
+			_, err = move_probs_writer.WriteString(fmt.Sprintf("%v,%.5f,%.5f,%.5f,%.5f,%.5f\n", i+1, swap_prob, rot_prob, trans_prob, insert_prob, delete_prob))
+			Check(err)
+		}
 		if config.write_CVs {
 			CV_writer.Flush()
 		}
 		if config.write_traj {
 			traj_writer.Flush()
+		}
+		if config.write_move_probs {
+			move_probs_writer.Flush()
 		}
 		bar.Increment()
 	}

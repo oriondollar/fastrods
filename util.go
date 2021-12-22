@@ -12,51 +12,52 @@ import (
 )
 
 type Config struct {
-	n_dim                 int
-	n_rods                int
-	rod_length            float64
-	rod_width             float64
-	aspect_ratio          float64
-	n_vertices            int
+	n_dim        int
+	n_rods       int
+	rod_length   float64
+	rod_width    float64
+	aspect_ratio float64
+	n_vertices   int
 
-	box_size           	  float64
-	box_dims			  []float64
-	V                     float64
-	nn_cutoff             float64
-	n_bins                []int
-	grid_spacings         []float64
-	n_grids               int
-	grid_bins             [][]float64
+	box_size      float64
+	box_dims      []float64
+	V             float64
+	nn_cutoff     float64
+	n_bins        []int
+	grid_spacings []float64
+	n_grids       int
+	grid_bins     [][]float64
 
 	mc_alg                string
 	cutoff_ratio          float64
 	restrict_orientations bool
 	restrict_translations bool
 
-	lattice_pattern		  string
-	facet_length		  float64
-	lattice_x			  int
-	lattice_y			  int
-	lattice_grid		  [][][]float64
-	lattice_moves		  [][]int
+	lattice_pattern string
+	facet_length    float64
+	lattice_x       int
+	lattice_y       int
+	lattice_grid    [][][]float64
+	lattice_moves   [][]int
 
-	temp                  float64
-	kb                    float64
-	beta                  float64
-	mu                    float64
+	temp float64
+	kb   float64
+	beta float64
+	mu   float64
 
-	n_cycles              int
-	n_insert_deletes      int
-	k                     int
-	avail_rod_ids         []int
-	next_unused_rod_id    int
+	n_cycles           int
+	n_insert_deletes   int
+	k                  int
+	avail_rod_ids      []int
+	next_unused_rod_id int
 
 	M               float64
-	bias 			float64
+	bias            float64
+	W               float64
 	r_prime         float64
 	overlap_penalty float64
 
-	potential_energy	  float64
+	potential_energy      float64
 	swap_successes        float64
 	swap_attempts         float64
 	insertion_successes   float64
@@ -68,12 +69,15 @@ type Config struct {
 	translation_successes float64
 	translation_attempts  float64
 
-	write_CVs       bool
-	write_traj      bool
-	write_CV_freq   int
-	write_traj_freq int
-	CV_out          string
-	traj_out        string
+	write_CVs             bool
+	write_traj            bool
+	write_move_probs      bool
+	write_CV_freq         int
+	write_traj_freq       int
+	write_move_probs_freq int
+	CV_out                string
+	traj_out              string
+	move_probs_out        string
 
 	print_proj bool
 }
@@ -194,8 +198,11 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "M" {
 					config.M, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
-				} else if key == "bias"{
+				} else if key == "bias" {
 					config.bias, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
+				} else if key == "W" {
+					config.W, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
 				} else if key == "r_prime" {
 					config.r_prime, ke = strconv.ParseFloat(value, 64)
@@ -215,16 +222,24 @@ func ReadConfig(fn string) (config Config, err error) {
 				} else if key == "write_traj" {
 					config.write_traj, ke = strconv.ParseBool(value)
 					Check(ke)
+				} else if key == "write_move_probs" {
+					config.write_move_probs, ke = strconv.ParseBool(value)
+					Check(ke)
 				} else if key == "write_CV_freq" {
 					config.write_CV_freq, ke = strconv.Atoi(value)
 					Check(ke)
 				} else if key == "write_traj_freq" {
 					config.write_traj_freq, ke = strconv.Atoi(value)
 					Check(ke)
+				} else if key == "write_move_probs_freq" {
+					config.write_move_probs_freq, ke = strconv.Atoi(value)
+					Check(ke)
 				} else if key == "CV_out" {
 					config.CV_out = value
 				} else if key == "traj_out" {
 					config.traj_out = value
+				} else if key == "move_probs_out" {
+					config.move_probs_out = value
 				}
 			}
 		}
@@ -252,7 +267,7 @@ func ReadConfig(fn string) (config Config, err error) {
 			dx := config.facet_length
 			dy := 2 * facet_height
 			lattice_x := math.Floor(config.box_size / dx)
-			lattice_y := 2 * math.Floor(config.box_size / dy)
+			lattice_y := 2 * math.Floor(config.box_size/dy)
 			config.box_dims[0] = lattice_x * dx
 			config.box_dims[1] = lattice_y * facet_height
 			config.lattice_x = int(lattice_x)
@@ -264,30 +279,62 @@ func ReadConfig(fn string) (config Config, err error) {
 					config.lattice_grid[i][j] = make([]float64, config.n_dim)
 					var x_coord float64
 					var y_coord float64
-					if j % 2 == 0 {
-						x_coord = float64(i) * dx + (dx / 4)
+					if j%2 == 0 {
+						x_coord = float64(i)*dx + (dx / 4)
 					} else {
-						x_coord = (float64(i) * dx) + (dx / 2 + dx / 4)
+						x_coord = (float64(i) * dx) + (dx/2 + dx/4)
 					}
-					y_coord = float64(j) * (dy / 2) + (dy / 4)
+					y_coord = float64(j)*(dy/2) + (dy / 4)
 					config.lattice_grid[i][j][0] = x_coord
 					config.lattice_grid[i][j][1] = y_coord
 				}
 			}
 			lattice_moves := [11][2]int{{0, 0},
-										{0, 2}, {0, -2},
-										{1, 0}, {-1, 0},
-										{0, 1}, {0, -1},
-										{-1, 1}, {-1, -1},
-										{1, 1}, {1, -1}}
+				{0, 2}, {0, -2},
+				{1, 0}, {-1, 0},
+				{0, 1}, {0, -1},
+				{-1, 1}, {-1, -1},
+				{1, 1}, {1, -1}}
 			config.lattice_moves = make([][]int, 11)
 			for i := 0; i < 11; i++ {
 				config.lattice_moves[i] = make([]int, config.n_dim)
 				config.lattice_moves[i][0] = lattice_moves[i][0]
 				config.lattice_moves[i][1] = lattice_moves[i][1]
 			}
+		} else if config.lattice_pattern == "square" {
+			facet_height := config.facet_length
+			dx := config.facet_length
+			dy := facet_height
+			lattice_x := math.Floor(config.box_size / dx)
+			lattice_y := math.Floor(config.box_size / dy)
+			config.box_dims[0] = lattice_x * dx
+			config.box_dims[1] = lattice_y * dy
+			config.lattice_x = int(lattice_x)
+			config.lattice_y = int(lattice_y)
+			config.lattice_grid = make([][][]float64, config.lattice_x)
+			for i := 0; i < config.lattice_x; i++ {
+				config.lattice_grid[i] = make([][]float64, config.lattice_y)
+				for j := 0; j < config.lattice_y; j++ {
+					config.lattice_grid[i][j] = make([]float64, config.n_dim)
+					x_coord := (float64(i) * dx) + (dx / 4)
+					y_coord := (float64(j) * dy) + (dy / 4)
+					config.lattice_grid[i][j][0] = x_coord
+					config.lattice_grid[i][j][1] = y_coord
+				}
+			}
+			lattice_moves := [9][2]int{{0, 0},
+				{1, 0}, {-1, 0},
+				{0, 1}, {0, -1},
+				{1, 1}, {1, -1},
+				{-1, 1}, {-1, -1}}
+			config.lattice_moves = make([][]int, 9)
+			for i := 0; i < 9; i++ {
+				config.lattice_moves[i] = make([]int, config.n_dim)
+				config.lattice_moves[i][0] = lattice_moves[i][0]
+				config.lattice_moves[i][1] = lattice_moves[i][1]
+			}
 		} else {
-			fmt.Println("Grid pattern must be triangular")
+			fmt.Println("Lattice pattern must be triangular or square")
 		}
 	}
 	config.V = 1
@@ -302,7 +349,7 @@ func ReadConfig(fn string) (config Config, err error) {
 		config.n_bins[i] = int(n_bins)
 		config.grid_bins[i] = make([]float64, config.n_bins[i])
 		for j := 0; j < config.n_bins[i]; j++ {
-			config.grid_bins[i][j] = config.grid_spacings[i]*float64(j+1)
+			config.grid_bins[i][j] = config.grid_spacings[i] * float64(j+1)
 		}
 		config.n_grids *= config.n_bins[i]
 	}
