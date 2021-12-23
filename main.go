@@ -67,7 +67,7 @@ func main() {
 	}
 
 	// Prod
-	MonteCarlo(&rods, grid, &config)
+	// MonteCarlo(&rods, grid, &config)
 
 	// WriteTraj(rods, "rod_init.dat")
 
