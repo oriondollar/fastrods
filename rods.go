@@ -62,33 +62,20 @@ func GetRandLoc(config *Config, rod *Rod) {
 
 func GetRandOrientation(config *Config, rod *Rod) {
 	if config.restrict_orientations {
+		rand_w := rand.Float64()
 		if config.lattice_pattern == "triangular" {
-			rand_w := rand.Float64()
-			if rod.orientation != 0. {
-				var orientation_offset float64
-				if rand_w < (1. / 2.) {
-					orientation_offset = 60.
-				} else {
-					orientation_offset = 120.
-				}
-				rod.orientation += orientation_offset
-				if rod.orientation > 180. {
-					rod.orientation -= 180.
-				}
-			} else {
-				if rand_w < (1. / 3.) {
-					rod.orientation = 30.
-				} else if rand_w < (2. / 3.) {
-					rod.orientation = 90.
-				} else {
-					rod.orientation = 150.
-				}
-			}
-		} else if config.lattice_pattern == "square" {
-			if rod.orientation == 0. {
+			if rand_w < (1. / 3.) {
+				rod.orientation = 30.
+			} else if rand_w < (2. / 3.) {
 				rod.orientation = 90.
 			} else {
+				rod.orientation = 150.
+			}
+		} else if config.lattice_pattern == "square" {
+			if rand_w < (1. / 2.) {
 				rod.orientation = 0.
+			} else {
+				rod.orientation = 90.
 			}
 		}
 	} else {
