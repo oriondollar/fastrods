@@ -255,7 +255,9 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetVertices(config.n_dim, config.n_vertices, new_rod)
 		rods[rod.id] = new_rod
 		config.potential_energy += (new_surface_energy - og_surface_energy)
-		config.rotation_successes++
+		if og_rod.orientation != new_rod.orientation {
+			config.rotation_successes++
+		}
 	}
 	config.rotation_attempts++
 }
