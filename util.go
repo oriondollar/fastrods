@@ -29,6 +29,8 @@ type Config struct {
 	grid_bins     [][]float64
 
 	mc_alg                string
+	deposition_prob				float64
+	evaporation_prob			float64
 	cutoff_ratio          float64
 	restrict_orientations bool
 	restrict_translations bool
@@ -175,6 +177,9 @@ func ReadConfig(fn string) (config Config, err error) {
 					Check(ke)
 				} else if key == "mc_alg" {
 					config.mc_alg = value
+				} else if key == "deposition_prob" {
+					config.deposition_prob, ke = strconv.ParseFloat(value, 64)
+					Check(ke)
 				} else if key == "cutoff_ratio" {
 					config.cutoff_ratio, ke = strconv.ParseFloat(value, 64)
 					Check(ke)
@@ -250,6 +255,9 @@ func ReadConfig(fn string) (config Config, err error) {
 			return config, e
 		}
 	}
+	// MC Parameters
+	config.evaporation_prob = 1 - config.deposition_prob
+	
 	// Rod Geometry
 	config.rod_width = config.rod_length / config.aspect_ratio
 	config.n_vertices = int(math.Pow(2, float64(config.n_dim)))

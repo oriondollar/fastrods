@@ -49,32 +49,47 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 	bar := pb.StartNew(config.n_cycles)
 	bar.SetRefreshRate(time.Second)
 	for i := 0; i < config.n_cycles; i++ {
+
+		// REMAP DHAR ALGORITHM TO THIS CODE BEFORE MERGING TO MAIN
+		// for j := 0; j < config.n_rods; j++ {
+		// 	move_prob := rand.Float64()
+		// 	if move_prob < (1. / 3.) {
+		// 		rod := GetRandRod(*rods)
+		// 		Rotate(rod, grid, config, *rods)
+		// 	} else if move_prob < (2. / 3.) {
+		// 		rod := GetRandRod(*rods)
+		// 		Translate(rod, grid, config, *rods)
+		// 	} else {
+		// 		rod := GetRandRod(*rods)
+		// 		Swap(rod, grid, config, *rods)
+		// 	}
+		// }
+		// if config.mc_alg == "grand_canonical" {
+		// 	for j := 0; j < config.n_insert_deletes; j++ {
+		// 		remove_prob := rand.Float64()
+		// 		if remove_prob < (1. / 2.) {
+		// 			Insert(grid, config, rods)
+		// 		} else {
+		// 			if config.n_rods != 0 {
+		// 				rod := GetRandRod(*rods)
+		// 				Delete(rod, grid, config, *rods)
+		// 			}
+		// 		}
+		// 	}
+		// }
+
 		for j := 0; j < config.n_rods; j++ {
-			move_prob := rand.Float64()
-			if move_prob < (1. / 3.) {
-				rod := GetRandRod(*rods)
-				Rotate(rod, grid, config, *rods)
-			} else if move_prob < (2. / 3.) {
-				rod := GetRandRod(*rods)
-				Translate(rod, grid, config, *rods)
+			insert_prob := rand.Float64()
+			if insert_prob < (1. / 2.) { // config.deposition_prob eventually
+				Insert(grid, config, rods)
 			} else {
-				rod := GetRandRod(*rods)
-				Swap(rod, grid, config, *rods)
-			}
-		}
-		if config.mc_alg == "grand_canonical" {
-			for j := 0; j < config.n_insert_deletes; j++ {
-				remove_prob := rand.Float64()
-				if remove_prob < (1. / 2.) {
-					Insert(grid, config, rods)
-				} else {
-					if config.n_rods != 0 {
-						rod := GetRandRod(*rods)
-						Delete(rod, grid, config, *rods)
-					}
+				if config.n_rods != 0 {
+					rod := GetRandRods(*rods)
+					Delete(rod, grid, config, *rods)
 				}
 			}
 		}
+
 		// write results
 		if (config.write_CVs) && ((i+1)%config.write_CV_freq == 0) {
 			density := CalcDensity(config)

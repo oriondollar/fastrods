@@ -187,6 +187,7 @@ func Translate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// copy rod structs to use for rosenbluth trials
 	og_rod := RodDeepCopy(rod)
+	og_rod_orientation := og_rod.orientation
 	new_rod := RodDeepCopy(rod)
 
 	// calculate initial surface energy
@@ -227,6 +228,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 	// select new configuration
 	var new_surface_energy float64
 	new_rod.orientation, new_surface_energy = SelectWeightedConfig(new_orientations, new_surface_energies, new_weights, new_weight_sum, config.k)
+	new_rod_orientation := new_rod.orientation
 
 	// run k-1 rosenbluth trials to generate weights for original configuration
 	var og_weight_sum float64 = math.Exp(-config.beta * og_surface_energy)
@@ -255,7 +257,7 @@ func Rotate(rod *Rod, grid []*GridSpace, config *Config, rods []*Rod) {
 		GetVertices(config.n_dim, config.n_vertices, new_rod)
 		rods[rod.id] = new_rod
 		config.potential_energy += (new_surface_energy - og_surface_energy)
-		if og_rod.orientation != new_rod.orientation {
+		if og_rod_orientation != new_rod_orientation {
 			config.rotation_successes++
 		}
 	}
