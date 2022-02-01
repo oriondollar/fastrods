@@ -78,7 +78,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 		// 	}
 		// }
 
-		for j := 0; j < config.n_rods; j++ {
+		for j := 0; j < config.n_insert_deletes; j++ {
 			insert_prob := rand.Float64()
 			if insert_prob < (1. / 2.) { // config.deposition_prob eventually
 				Insert(grid, config, rods)
