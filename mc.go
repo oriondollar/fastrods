@@ -84,7 +84,7 @@ func MonteCarlo(rods *[]*Rod, grid []*GridSpace, config *Config) {
 				Insert(grid, config, rods)
 			} else {
 				if config.n_rods != 0 {
-					rod := GetRandRods(*rods)
+					rod := GetRandRod(*rods)
 					Delete(rod, grid, config, *rods)
 				}
 			}
